@@ -1,0 +1,9 @@
+pytest
+coverage
+pytest-cov
+click
+lxml
+six
+warcio
+warctools
+git+https://github.com/Digital-Preservation-Finland/xml-helpers.git#egg=xml_helpers
