@@ -70,19 +70,21 @@ class ArchiveHandler(object):
         :header: WARC header
         :record_type: Record type: "warcinfo" or "metadata"
         """
-        if record_type == "metadata":
-            info = self.metadata
-            record_func = self.set_metadata_record
-        elif record_type == "warcinfo":
-            info = self._make_warcinfo_payload()
-            record_func = self.set_warcinfo_record
-        else:
-            return
         builder = RecordBuilder("WARC/1.0")
-        byte_payload = BytesIO(encode_utf8(info))
-        record_func(builder.create_warc_record(
-            uri=None, record_type=record_type, payload=byte_payload,
-            warc_headers=header))
+        if record_type == "metadata":
+            self.set_metadata_record(builder.create_warc_record(
+                uri=None,
+                record_type=record_type,
+                payload=BytesIO(encode_utf8(self.metadata)),
+                warc_headers=header
+            ))
+        elif record_type == "warcinfo":
+            self.set_warcinfo_record(builder.create_warc_record(
+                uri=None,
+                record_type=record_type,
+                payload=BytesIO(encode_utf8(self._make_warcinfo_payload())),
+                warc_headers=header
+            ))
 
     def _make_warcinfo_payload(self):
         """
