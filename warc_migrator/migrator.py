@@ -14,12 +14,11 @@ from warc_migrator.warctools_handler import convert, is_arc
 @click.command()
 @click.argument("source_path", metavar="SOURCE", type=click.Path(exists=True))
 @click.argument("target_path", metavar="TARGET", type=click.Path(exists=False))
-@click.option("--encode", is_flag=True, help="URL encode HTTP headers.")
 @click.option("--meta", nargs=2, type=str, multiple=True,
               metavar="<NAME> <VALUE>", default=(),
               help="Warcinfo field name and value to be added to the WARC file."
                    "Overwrites existing field.")
-def warc_migrator_cli(source_path, target_path, encode, meta):
+def warc_migrator_cli(source_path, target_path, meta):
     """
     WARC Migrator.
 
@@ -33,16 +32,15 @@ def warc_migrator_cli(source_path, target_path, encode, meta):
     TARGET: Target file (warc.gz)
     """
     # \b above is for help formatting of click library
-    warc_migrator(source_path, target_path, encode, meta)
+    warc_migrator(source_path, target_path, meta)
 
 
-def warc_migrator(source_path, target_path, encode, meta):
+def warc_migrator(source_path, target_path, meta):
     """
     Migrate archive file to WARC 1.0.
 
     :source_path: Source archive file name
     :target_path: Target WARC file name, will be compressed WARC
-    :encode: True for HTTP header encoding, False for no encoding
     :meta: User given metadata fields to warcinfo record
     """
     if os.path.exists(target_path):
@@ -67,7 +65,7 @@ def warc_migrator(source_path, target_path, encode, meta):
 
             try:
                 with open(target_path, 'wb') as target:
-                    recount = warc_fixer.fix_warc(source, target, arc_file, encode)
+                    recount = warc_fixer.fix_warc(source, target, arc_file)
             except ArchiveLoadFailed as err:
                 message = "non-chunked gzip file detected, gzip block " \
                           "continues beyond single record"
@@ -77,7 +75,7 @@ def warc_migrator(source_path, target_path, encode, meta):
                         recompress_warc(source, tmp_warc)
                         tmp_warc.seek(0)
                         with open(target_path, 'wb') as target:
-                            recount = warc_fixer.fix_warc(tmp_warc, target, arc_file, encode)
+                            recount = warc_fixer.fix_warc(tmp_warc, target, arc_file)
                 else:
                     raise ArchiveLoadFailed(err)
 

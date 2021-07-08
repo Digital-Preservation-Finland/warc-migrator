@@ -22,17 +22,17 @@ class ArchiveHandler(object):
         self.metadata_record = None  # Warcio metadata record
         self.warcinfo_record = None  # Warcio warcinfo record
 
-    def add_warcinfo(self, warcinfo):
+    def set_warcinfo(self, warcinfo):
         """
-        Add a warcinfo dict.
+        Set a warcinfo dict.
 
         :warcinfo: Warcinfo dict to be added
         """
         self.warcinfo = warcinfo
 
-    def add_warcinfo_field(self, key, value):
+    def set_warcinfo_field(self, key, value):
         """
-        Add or replace an element to warcinfo dict.
+        Set or replace an element to warcinfo dict.
 
         :key: Key to be added
         :value: Value to be added
@@ -47,44 +47,41 @@ class ArchiveHandler(object):
         """
         self.metadata += encode_utf8(metadata)
 
-    def add_metadata_record(self, record):
+    def set_metadata_record(self, record):
         """
-        Add Warcio record of metadata.
+        Set Warcio record of metadata.
 
         :record: Metadata record
         """
         self.metadata_record = record
 
-    def add_warcinfo_record(self, record):
+    def set_warcinfo_record(self, record):
         """
-        Add Warcio record of warcinfo.
+        Set Warcio record of warcinfo.
 
         :record: Warcinfo record
         """
         self.warcinfo_record = record
 
-    def create_metadata_record(self, header):
+    def create_info_record(self, header, record_type):
         """
-        Create new record from given header, payload and record type.
+        Create new info record from given header and record type.
 
         :header: WARC header
+        :record_type: Record type: "warcinfo" or "metadata"
         """
+        if record_type == "metadata":
+            info = self.metadata
+            record_func = self.set_metadata_record
+        elif record_type == "warcinfo":
+            info = self._make_warcinfo_payload()
+            record_func = self.set_warcinfo_record
+        else:
+            return
         builder = RecordBuilder("WARC/1.0")
-        byte_payload = BytesIO(encode_utf8(self.metadata))
-        self.add_metadata_record(builder.create_warc_record(
-            uri=None, record_type="metadata", payload=byte_payload,
-            warc_headers=header))
-
-    def create_warcinfo_record(self, header):
-        """
-        Create new record from given header, payload and record type.
-
-        :header: WARC header
-        """
-        builder = RecordBuilder("WARC/1.0")
-        byte_payload = BytesIO(encode_utf8(self._make_warcinfo_payload()))
-        self.add_warcinfo_record(builder.create_warc_record(
-            uri=None, record_type="metadata", payload=byte_payload,
+        byte_payload = BytesIO(encode_utf8(info))
+        record_func(builder.create_warc_record(
+            uri=None, record_type=record_type, payload=byte_payload,
             warc_headers=header))
 
     def _make_warcinfo_payload(self):

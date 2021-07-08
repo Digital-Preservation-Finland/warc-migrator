@@ -14,7 +14,7 @@ Warcio tool for the migration. See:
 Installation:
 -------------
 
-This software is tested with Python 2.7 with CentOS 7.x / RHEL 7.x releases.
+This software is tested with Python 2.7 and 3.6 with CentOS 7.x release.
 
 Install the required software to a virtual environment with commands::
 
@@ -22,12 +22,7 @@ Install the required software to a virtual environment with commands::
     virtualenv venv
     source venv/bin/activate
     pip install --upgrade pip setuptools
-    pip install click
-    pip install lxml
-    pip install six
-    pip install warcio
-    pip install warctools
-    pip install git+https://github.com/Digital-Preservation-Finland/xml-helpers.git#egg=xml_helpers
+    pip install -r requirements_github.txt
 
 Usage:
 ------
@@ -39,12 +34,10 @@ Use the software with the following command::
 The `sourcefile` must be existing ARC 1.0/1.1 or WARC 0.17/0.18 file.
 The `targetfile` must be a non-existing file.
 
-Option `--encode` URL encodes HTTP headers.
-
 Option `--meta` along with `fieldname` and `value` is optional and can be
 given multiple times. The `fieldname` is the name of the warcinfo field and
 `value` is the contained metadata string. These fields are added to warcinfo
-record. The given field overwrites the existing field.
+record. The given field overwrites the possibly existing field.
 
 Copyright
 ---------

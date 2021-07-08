@@ -26,29 +26,6 @@ def recompress_warc(source, target):
         writer.write_record(record)
 
 
-class SimpleHeader(object):
-    """
-    Fake buffer of Warcio HTTP header to avoid encoding of bytes.
-    """
-    def __init__(self, headers):
-        """
-        Warcio has headers_buff attribute for header infomation.
-        TODO: Assumes ISO-8859-1 encoding in Python3. Could be something else.
-
-        :headers: Warcio record header
-        """
-        if six.PY2:
-            self.headers_buff = headers.to_str() + b"\r\n"
-        else:
-            self.headers_buff = headers.to_str().encode("iso-8859-1") + b"\r\n"
-
-    def compute_headers_buffer(self, header_filter=None):
-        """
-        Just skip the computing operations to heaader buffer.
-        """
-        pass
-
-
 class WarcFixer(object):
     """
     Fix WARC file in various ways.
@@ -77,14 +54,13 @@ class WarcFixer(object):
         self.given_warcinfo = given_warcinfo
         self.target_name = target_name
 
-    def fix_warc(self, source_handler, target_handler, arc_file, encode):
+    def fix_warc(self, source_handler, target_handler, arc_file):
         """
         Fix WARC file in various ways, see class comment for details.
 
         :source_handler: Source file handler
         :target_handler: Target file handler
         :arc_file: True for original ARC file, False for original WARC file
-        :encode: True for HTTP header encoding, False for skipping encoding
         """
         count = 0
         warcinfo_fixed = False
@@ -97,11 +73,11 @@ class WarcFixer(object):
             if arc_file and not warcinfo_fixed:
                 if record.rec_type == "warcinfo" and \
                         record.content_type == "application/warc-fields":
-                    self.source.add_warcinfo_record(record)
+                    self.source.set_warcinfo_record(record)
                     continue
                 elif record.rec_type == "metadata" and \
                         record.content_type == "application/arc":
-                    self.source.add_metadata_record(record)
+                    self.source.set_metadata_record(record)
                     self._extract_arc_metadata()
                     self._fix_metadata()
                     self._fix_warcinfo()
@@ -112,7 +88,7 @@ class WarcFixer(object):
             elif not arc_file and record.rec_type == "warcinfo" and \
                     record.content_type == "application/warc-fields" and \
                     not warcinfo_fixed:
-                self.source.add_warcinfo_record(record)
+                self.source.set_warcinfo_record(record)
                 self._extract_warcinfo()
                 self._fix_warcinfo()
                 warc_writer.write_record(self.target.warcinfo_record)
@@ -121,18 +97,14 @@ class WarcFixer(object):
             else:
                 record.rec_headers.protocol = "WARC/1.0"
                 if record.http_headers:
-                    if encode:
-                        status = record.http_headers.statusline.split(" ", 1)
-                        if len(status) > 1:
-                            try:
-                                status[1].encode('ascii')
-                            except:
-                                record.http_headers.statusline = " ".join(
-                                    [status[0],
-                                     six.moves.urllib.parse.quote(status[1])])
-                    else:
-                        record.http_headers = SimpleHeader(
-                            record.http_headers)
+                    status = record.http_headers.statusline.split(" ", 1)
+                    if len(status) > 1:
+                        try:
+                            status[1].encode('ascii')
+                        except:
+                            record.http_headers.statusline = " ".join(
+                                [status[0],
+                                 six.moves.urllib.parse.quote(status[1])])
                 warc_writer.write_record(record)
                 count += 1
 
@@ -145,21 +117,18 @@ class WarcFixer(object):
         - Add user given fields. Overwrites, if exists.
         - Rewrite WARC-Date and WARC-Filename fields from the header.
         """
-        self.target.add_warcinfo(deepcopy(self.source.warcinfo))
+        self.target.set_warcinfo(deepcopy(self.source.warcinfo))
         self.target.warcinfo["conformsTo"] = \
             "https://iipc.github.io/warc-specifications/" \
             "specifications/warc-format/warc-1.0/"
         self.target.warcinfo["format"] = "WARC File Format 1.0"
         for key, value in self.given_warcinfo.items():
             self.target.warcinfo[key] = value
-        self.target.create_warcinfo_record(
-            self.source.warcinfo_record.rec_headers)
-        remove_field = []
+        self.target.create_info_record(
+            self.source.warcinfo_record.rec_headers, "warcinfo")
         for field in self.target.warcinfo_record.rec_headers.headers:
             if "WARC-Filename" in field or "WARC-Date" in field:
-                remove_field.append(field)
-        for field in remove_field:
-            self.target.warcinfo_record.rec_headers.headers.remove(field)
+                self.target.warcinfo_record.rec_headers.headers.remove(field)
         self.target.warcinfo_record.rec_headers.headers.append((
             "WARC-Filename", os.path.basename(self.target_name)))
         date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -172,8 +141,10 @@ class WarcFixer(object):
         to application/x-internet-archive
         """
         self.target.metadata = self.source.metadata
-        self.target.create_metadata_record(self.source.metadata_record.rec_headers)
-        self.target.metadata_record.content_type = "application/x-internet-archive"
+        self.target.create_info_record(
+            self.source.metadata_record.rec_headers, "metadata")
+        self.target.metadata_record.content_type = \
+            "application/x-internet-archive"
         self.target.metadata_record.rec_headers.protocol = "WARC/1.0"
 
     def _extract_warcinfo(self):
@@ -185,7 +156,7 @@ class WarcFixer(object):
             if field == b"\r\n":
                 break
             split_row = field.split(b":", 1)
-            self.source.add_warcinfo_field(split_row[0], split_row[1])
+            self.source.set_warcinfo_field(split_row[0], split_row[1])
 
     def _extract_arc_metadata(self):
         """
@@ -216,4 +187,4 @@ class WarcFixer(object):
         for field in arc_metadata:
             tagname = field.tag.split("}")[1]
             if tagname != "arcmetadata":
-                self.source.add_warcinfo_field(tagname, field.text)
+                self.source.set_warcinfo_field(tagname, field.text)
