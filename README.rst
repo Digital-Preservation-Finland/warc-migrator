@@ -8,6 +8,7 @@ testing purposes only.
 
 Mainly, the tool uses the MIT licensed Warctools and the Apache 2.0 licensed
 Warcio tool for the migration. See:
+
 - Warctools: https://github.com/internetarchive/warctools
 - Warcio: https://github.com/webrecorder/warcio
 
