@@ -54,30 +54,31 @@ def warc_migrator(source_path, target_path, meta):
     warc_fixer = WarcFixer(given_warcinfo,
                            target_name=os.path.basename(target_path))
 
-    with tempfile.NamedTemporaryFile(prefix="warc-migrator.") as tmp_source:
-        with open(source_path, 'rb') as real_source:
-            if arc_file:
-                count = convert(source_path, tmp_source)
-                tmp_source.seek(0)
-                source = tmp_source
-            else:
-                source = real_source
+    with tempfile.NamedTemporaryFile(prefix="warc-migrator.") if arc_file \
+            else open(source_path, 'rb') as source_buffer:
+        if arc_file:
+            count = convert(source_path, source_buffer)
+            source_buffer.seek(0)
+            source = source_buffer
+        else:
+            source = source_buffer
 
-            try:
-                with open(target_path, 'wb') as target:
-                    recount = warc_fixer.fix_warc(source, target, arc_file)
-            except ArchiveLoadFailed as err:
-                message = "non-chunked gzip file detected, gzip block " \
-                          "continues beyond single record"
-                if message in err:
-                    source.seek(0)
-                    with tempfile.NamedTemporaryFile(prefix="warc-migrator.") as tmp_warc:
-                        recompress_warc(source, tmp_warc)
-                        tmp_warc.seek(0)
-                        with open(target_path, 'wb') as target:
-                            recount = warc_fixer.fix_warc(tmp_warc, target, arc_file)
-                else:
-                    raise ArchiveLoadFailed(err)
+        try:
+            with open(target_path, 'wb') as target:
+                recount = warc_fixer.fix_warc(source, target, arc_file)
+        except ArchiveLoadFailed as err:
+            message = "non-chunked gzip file detected, gzip block " \
+                      "continues beyond single record"
+            if message in err:
+                source.seek(0)
+                with tempfile.NamedTemporaryFile(prefix="warc-migrator.") as \
+                        tmp_warc:
+                    recompress_warc(source, tmp_warc)
+                    tmp_warc.seek(0)
+                    with open(target_path, 'wb') as target:
+                        recount = warc_fixer.fix_warc(tmp_warc, target, arc_file)
+            else:
+                raise ArchiveLoadFailed(err)
 
     if arc_file and recount != count:
         raise ValueError("Count mismatch, originally %s records, recounted "

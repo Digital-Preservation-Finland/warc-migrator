@@ -16,13 +16,14 @@ def recompress_warc(source, target):
     Open a WARC file an rewrite it to fix compression problems.
     Originally some implementations created warc compression in a wrong but
     readable way. Recompressing the warc fixes this.
+
+    :source: Source file buffer
+    :target: Target file buffer
     """
     writer = WARCWriter(filebuf=target, gzip=True)
     for record in ArchiveIterator(
             source, no_record_parse=False,
             arc2warc=False, verify_http=False):
-        if record.http_headers:
-            record.http_headers = SimpleHeader(record.http_headers)
         writer.write_record(record)
 
 
