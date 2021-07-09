@@ -45,6 +45,8 @@ def warc_migrator(source_path, target_path, meta):
     """
     if os.path.exists(target_path):
         raise OSError("Target file already exists.")
+    if os.stat(source_path).st_size == 0:
+        raise IOError("Empty source file.")
 
     given_warcinfo = {}
     for field in meta:
