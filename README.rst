@@ -30,7 +30,7 @@ Usage:
 
 Use the software with the following command::
 
-    python warc_migrator.py sourcefile targetfile [--meta fieldname value ...]
+    python warc_migrator/migrator.py sourcefile targetfile [--meta fieldname value ...]
 
 The `sourcefile` must be existing ARC 1.0/1.1 or WARC 0.17/0.18 file.
 The `targetfile` must be a non-existing file.
