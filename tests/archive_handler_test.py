@@ -1,11 +1,13 @@
-"""Test the methods of ArchiveHandler
+"""
+Test the methods of ArchiveHandler
 """
 from warc_migrator.archive_handler import ArchiveHandler
 from warcio.statusandheaders import StatusAndHeaders
 
 
 def test_archive_handler():
-    """Test the attribute setters of ArchiveHandler
+    """
+    Test the attribute setters of ArchiveHandler.
     """
     archive = ArchiveHandler()
     archive.set_warcinfo({"key1": "value1"})
@@ -21,7 +23,8 @@ def test_archive_handler():
 
 
 def test_create_info_record():
-    """Test warcinfo and metadata record creation
+    """
+    Test warcinfo and metadata record creation.
     """
     archive = ArchiveHandler()
     headers = StatusAndHeaders(
@@ -44,7 +47,8 @@ def test_create_info_record():
 
 
 def test_make_warcinfo_payload():
-    """Test converting the warcinfo dict to byte payload
+    """
+    Test converting the warcinfo dict to byte payload.
     """
     archive = ArchiveHandler()
     archive.warcinfo = {"info1": "infovalue1", "info2": "infovalue2"}

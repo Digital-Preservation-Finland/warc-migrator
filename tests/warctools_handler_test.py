@@ -1,4 +1,5 @@
-"""Test Warctools handler
+"""
+Test Warctools handler
 """
 import os
 import hashlib
@@ -8,6 +9,7 @@ from warc_migrator.warctools_handler import is_arc, convert
 
 def test_is_arc():
     """
+    Test whether the file is an ARC or a WARC file.
     """
     assert is_arc("tests/data/valid_1.0.arc")
     assert is_arc("tests/data/valid_1.1.arc")
@@ -24,6 +26,7 @@ def test_is_arc():
 )
 def test_convert(testpath, infile, given_count):
     """
+    Test conversion from ARC to WARC.
     """
     with open(os.path.join(testpath, "warc.warc.gz"), "wb") as out:
         count = convert(os.path.join("tests/data", infile), out)

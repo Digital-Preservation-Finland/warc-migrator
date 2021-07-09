@@ -1,0 +1,71 @@
+WARC/1.0
+WARC-Type: warcinfo
+WARC-Record-ID: <urn:uuid:955010ac-08cb-383d-a118-0905dbd06e23>
+WARC-Date: 2021-07-09T19:25:25Z
+WARC-Filename: tests/data/valid_1.0_warctools_resulted.warc
+Content-Type: application/warc-fields
+Content-Length: 50
+
+description: 
+operator: 
+publisher: 
+audience: 
+
+WARC/1.0
+WARC-Type: metadata
+WARC-Concurrent-To: <urn:uuid:955010ac-08cb-383d-a118-0905dbd06e23>
+WARC-Record-ID: <urn:uuid:194e9135-6a93-99fe-dd29-96aaec35bdb0>
+WARC-Target-URI: valid_1.0.arc
+WARC-Date: 2021-06-15T18:15:00Z
+WARC-Warcinfo-ID: <urn:uuid:955010ac-08cb-383d-a118-0905dbd06e23>
+Content-Type: application/arc
+Content-Length: 925
+
+filedesc://valid_1.0.arc 0.0.0.0 20210615181500 text/plain 862
+1 1 Test
+URL IP-address Archive-date Content-type Archive-length
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<arcmetadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:arc="http://archive.org/arc/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://archive.org/arc/1.0/ http://www.archive.org/arc/1.0/arc.xsd">
+<arc:software>Test Crawler</arc:software>
+<arc:hostname>localhost</arc:hostname>
+<arc:ip>0.0.0.0</arc:ip>
+<dcterms:isPartOf>test collection</dcterms:isPartOf>
+<dc:description>Test description</dc:description>
+<dc:date xsi:type="dcterms:W3CDTF">2021-06-15T18:15:00+00:00</dc:date>
+<dc:format>ARC file version 1.1</dc:format>
+<dcterms:conformsTo xsi:type="dcterms:URI">http://www.archive.org/web/researcher/ArcFileFormat.php</dcterms:conformsTo>
+</arcmetadata>
+
+
+WARC/1.0
+WARC-Record-ID: <urn:uuid:af179e77-6c6b-bc2a-421e-fce2d325765a>
+WARC-Target-URI: dns:localhost
+WARC-Warcinfo-ID: <urn:uuid:955010ac-08cb-383d-a118-0905dbd06e23>
+WARC-Date: 2021-06-15T18:14:00Z
+WARC-Type: resource
+Content-Type: text/dns
+Content-Length: 45
+
+20210615181400
+localhost.	12345	IN	A	0.0.0.0
+
+
+WARC/1.0
+WARC-Record-ID: <urn:uuid:2c238319-b168-cdad-9bdd-695f5fb540d1>
+WARC-Target-URI: http://localhost/localfile.txt
+WARC-Warcinfo-ID: <urn:uuid:955010ac-08cb-383d-a118-0905dbd06e23>
+WARC-Date: 2021-06-15T18:13:00Z
+WARC-Type: response
+Content-Type: application/http;msgtype=response
+Content-Length: 170
+
+HTTP/1.1 200 OK
+Date: Tue, 15 Jun 2021 18:13:00 GMT
+Server: Local Server
+Content-Length: 9
+Content-Type: text/html; charset=ISO-8859-1
+Connection: close
+
+<html/>
+
+
