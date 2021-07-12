@@ -6,8 +6,10 @@ import subprocess
 import tempfile
 import click
 from warcio.exceptions import ArchiveLoadFailed
+from warcio.warcwriter import WARCWriter
+from warcio.archiveiterator import ArchiveIterator
 from xml_helpers.utils import decode_utf8
-from warc_migrator.warc_fixer import WarcFixer, recompress_warc
+from warc_migrator.warc_fixer import WarcFixer
 from warc_migrator.warctools_handler import convert, is_arc
 
 
@@ -75,7 +77,7 @@ def warc_migrator(source_path, target_path, meta):
                 source.seek(0)
                 with tempfile.NamedTemporaryFile(prefix="warc-migrator.") as \
                         tmp_warc:
-                    recompress_warc(source, tmp_warc)
+                    _rewrite_warc(source, tmp_warc)
                     tmp_warc.seek(0)
                     with open(target_path, 'wb') as target:
                         recount = warc_fixer.fix_warc(tmp_warc, target, arc_file)
@@ -97,6 +99,22 @@ def validate(warc_file):
     """
     _shell(["warcvalid", warc_file])
     _shell(["warcio", "check", warc_file])
+
+
+def _rewrite_warc(source, target):
+    """
+    Open a WARC file an rewrite it. This is used for fixing a compression
+    issue. Originally some implementations created warc compression in a
+    wrong way.
+
+    :source: Source file buffer
+    :target: Target file buffer
+    """
+    writer = WARCWriter(filebuf=target, gzip=True)
+    for record in ArchiveIterator(
+            source, no_record_parse=False,
+            arc2warc=False, verify_http=False):
+        writer.write_record(record)
 
 
 def _shell(command, stdout=subprocess.PIPE):

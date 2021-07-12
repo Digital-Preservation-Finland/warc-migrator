@@ -1,9 +1,47 @@
 """
 Test WARC fixing methods
 """
+import os
+import pytest
 from warcio.statusandheaders import StatusAndHeaders
 from warcio.archiveiterator import ArchiveIterator
 from warc_migrator.warc_fixer import WarcFixer
+
+
+@pytest.mark.parametrize(
+    ["infile", "arc_data", "given_count"],
+    [
+        ("valid_0.17.warc", False, 2),
+        ("valid_0.17_scandinavian.warc", False, 2),
+        ("valid_1.0_warctools_resulted.warc", True, 4)
+    ]
+)
+def test_fix_warc(infile, arc_data, given_count, testpath):
+    """
+    Test warc fixing.
+    """
+    infile_path = os.path.join("tests/data", infile)
+    result_file = os.path.join(testpath, "warc.warc.gz")
+    given_warcinfo = {"info1": "infovalue1", "info2": "infovalue2"}
+    warc_fixer = WarcFixer(given_warcinfo, "warc.warc.gz")
+    with open(infile_path, "rb") as filein:
+        with open(result_file, "wb") as out:
+            count = warc_fixer.fix_warc(filein, out, arc_data)
+    assert count == given_count
+    assert warc_fixer.target.warcinfo["info1"] == "infovalue1"
+    assert warc_fixer.target.warcinfo["info2"] == "infovalue2"
+    assert warc_fixer.target.warcinfo["conformsTo"] == \
+        "https://iipc.github.io/warc-specifications/specifications/" \
+        "warc-format/warc-1.0/"
+    assert warc_fixer.target.warcinfo["format"] == "WARC File Format 1.0"
+    assert len(warc_fixer.target.warcinfo) == 10
+    assert ("WARC-Filename", "warc.warc.gz") in \
+        warc_fixer.target.warcinfo_record.rec_headers.headers
+    found = False
+    for head in warc_fixer.target.warcinfo_record.rec_headers.headers:
+        if "WARC-Date" in head:
+            found = True
+    assert found
 
 
 def test_fix_warcinfo():

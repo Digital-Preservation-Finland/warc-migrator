@@ -11,22 +11,6 @@ from warcio.archiveiterator import ArchiveIterator
 from warc_migrator.archive_handler import ArchiveHandler
 
 
-def recompress_warc(source, target):
-    """
-    Open a WARC file an rewrite it to fix compression problems.
-    Originally some implementations created warc compression in a wrong but
-    readable way. Recompressing the warc fixes this.
-
-    :source: Source file buffer
-    :target: Target file buffer
-    """
-    writer = WARCWriter(filebuf=target, gzip=True)
-    for record in ArchiveIterator(
-            source, no_record_parse=False,
-            arc2warc=False, verify_http=False):
-        writer.write_record(record)
-
-
 class WarcFixer(object):
     """
     Fix WARC file in various ways.
@@ -75,7 +59,6 @@ class WarcFixer(object):
                 if record.rec_type == "warcinfo" and \
                         record.content_type == "application/warc-fields":
                     self.source.set_warcinfo_record(record)
-                    continue
                 elif record.rec_type == "metadata" and \
                         record.content_type == "application/arc":
                     self.source.set_metadata_record(record)
