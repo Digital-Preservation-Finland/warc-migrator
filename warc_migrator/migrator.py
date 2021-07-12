@@ -3,8 +3,10 @@ Migrate ARC 1.0/1.1 and WARC 0.17/0.18 to WARC 1.0 and validate it.
 """
 import os
 import subprocess
+import shutil
 import tempfile
 import click
+from warcio.bufferedreaders import DecompressingBufferedReader
 from warcio.exceptions import ArchiveLoadFailed
 from warcio.warcwriter import WARCWriter
 from warcio.archiveiterator import ArchiveIterator
@@ -71,13 +73,17 @@ def warc_migrator(source_path, target_path, meta):
             with open(target_path, 'wb') as target:
                 recount = warc_fixer.fix_warc(source, target, arc_file)
         except ArchiveLoadFailed as err:
-            message = "non-chunked gzip file detected, gzip block " \
-                      "continues beyond single record"
-            if message in err:
+            if "ERROR: non-chunked gzip file detected" in str(err):
                 source.seek(0)
                 with tempfile.NamedTemporaryFile(prefix="warc-migrator.") as \
                         tmp_warc:
-                    _rewrite_warc(source, tmp_warc)
+                    with tempfile.TemporaryFile() as tmp_source:
+                        decomp = DecompressingBufferedReader(
+                            source, read_all_members=True)
+                        source.seek(0)
+                        shutil.copyfileobj(decomp, tmp_source)
+                        tmp_source.seek(0)
+                        _rewrite_warc(tmp_source, tmp_warc)
                     tmp_warc.seek(0)
                     with open(target_path, 'wb') as target:
                         recount = warc_fixer.fix_warc(tmp_warc, target, arc_file)

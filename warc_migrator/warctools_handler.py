@@ -50,7 +50,7 @@ def convert(infile, out):
             try:
                 warcs = arc.convert(record)
             except ValueError as err:
-                if "invalid literal for int() with base 10: ''" in err:
+                if "invalid literal for int() with base 10: ''" in str(err):
                     warcs = _process_empty_length_record(record, arc)
                     for warcrecord in warcs:
                         warcrecord.write_to(out, gzip=False)
