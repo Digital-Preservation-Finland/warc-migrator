@@ -111,7 +111,7 @@ class WarcFixer(object):
                     if len(status) > 1:
                         try:
                             status[1].encode('ascii')
-                        except UnicodeEncodeError:
+                        except (UnicodeEncodeError, UnicodeDecodeError):
                             record.http_headers.statusline = " ".join(
                                 [status[0],
                                  six.moves.urllib.parse.quote(status[1])])
