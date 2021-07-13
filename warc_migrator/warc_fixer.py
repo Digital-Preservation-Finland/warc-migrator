@@ -3,12 +3,38 @@ Fix produced WARC file to WARC 1.0.
 """
 import os
 import datetime
+import shutil
+import tempfile
 from copy import deepcopy
 import six
 import lxml.etree as ET
 from warcio.warcwriter import WARCWriter
 from warcio.archiveiterator import ArchiveIterator
+from warcio.bufferedreaders import DecompressingBufferedReader
 from warc_migrator.archive_handler import ArchiveHandler
+
+
+def recompress_warc(source, target):
+    """
+    Recompress a WARC file. This is used for fixing a compression
+    issue. Originally, some implementations created WARC compression in a
+    wrong way, and this is used to resolve it.
+
+    :source: Source file buffer
+    :target: Target file buffer
+    """
+    source.seek(0)
+    with tempfile.TemporaryFile() as tmp_source:
+        decomp_buff = DecompressingBufferedReader(
+            source, read_all_members=True)
+        shutil.copyfileobj(decomp_buff, tmp_source)
+        tmp_source.seek(0)
+        writer = WARCWriter(filebuf=target, gzip=True)
+        for record in ArchiveIterator(
+                tmp_source, no_record_parse=False,
+                arc2warc=False, verify_http=False):
+            writer.write_record(record)
+        target.seek(0)
 
 
 class WarcFixer(object):
@@ -85,7 +111,7 @@ class WarcFixer(object):
                     if len(status) > 1:
                         try:
                             status[1].encode('ascii')
-                        except:
+                        except UnicodeEncodeError:
                             record.http_headers.statusline = " ".join(
                                 [status[0],
                                  six.moves.urllib.parse.quote(status[1])])

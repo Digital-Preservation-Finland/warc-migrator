@@ -94,14 +94,18 @@ def test_extract_warcinfo():
     """
     Test extracting warcinfo from a WARC 0.17 file.
     """
-    header = StatusAndHeaders(
-        "200 OK", [("field1", "value1"), ("field2", "value2")])
     given_warcinfo = {"info1": "infovalue1", "info2": "infovalue2"}
     warc_fixer = WarcFixer(given_warcinfo, "test.warc.gz")
     warc_fixer.source.set_warcinfo(given_warcinfo)
-    with open("tests/data/valid_0.17.warc") as warc_file:
-        record = ArchiveIterator(warc_file).next()
-    warc_fixer.source.set_warcinfo_record(record)
+
+    with open("tests/data/valid_0.17.warc", "rb") as warc_file:
+        for record in ArchiveIterator(fileobj=warc_file,
+                                      no_record_parse=False,
+                                      verify_http=False, arc2warc=False,
+                                      ensure_http_headers=False):
+            warc_fixer.source.set_warcinfo_record(record)
+            break
+
     warc_fixer._extract_warcinfo()
     assert warc_fixer.source.warcinfo["info1"] == "infovalue1"
     assert warc_fixer.source.warcinfo["info2"] == "infovalue2"
@@ -123,15 +127,19 @@ def test_extract_arc_metadata():
     Test ARC metadata extracting to warcinfo from a warc file directlt created by
     Warctools.
     """
-    header = StatusAndHeaders("200 OK", [])
     warc_fixer = WarcFixer({}, "test.warc.gz")
-    with open("tests/data/valid_1.0_warctools_resulted.warc") as arc_file:
+    with open("tests/data/valid_1.0_warctools_resulted.warc", "rb") as \
+            warc_file:
         count = 0
-        for record in ArchiveIterator(arc_file):
+        for record in ArchiveIterator(fileobj=warc_file,
+                                      no_record_parse=False,
+                                      verify_http=False, arc2warc=False,
+                                      ensure_http_headers=False):
             count += 1
             if count == 2:
+                warc_fixer.source.set_metadata_record(record)
                 break
-    warc_fixer.source.set_metadata_record(record)
+
     warc_fixer._extract_arc_metadata()
     assert warc_fixer.source.warcinfo["conformsTo"] == \
         "http://www.archive.org/web/researcher/ArcFileFormat.php"

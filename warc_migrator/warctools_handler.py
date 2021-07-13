@@ -55,7 +55,7 @@ def convert(infile, out):
                     for warcrecord in warcs:
                         warcrecord.write_to(out, gzip=False)
                 else:
-                    raise ValueError(err)
+                    raise
             else:
                 for warcrecord in warcs:
                     warcrecord.write_to(out, gzip=False)

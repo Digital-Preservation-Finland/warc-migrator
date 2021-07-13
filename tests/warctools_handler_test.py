@@ -2,7 +2,6 @@
 Test Warctools handler
 """
 import os
-import hashlib
 import pytest
 from warc_migrator.warctools_handler import is_arc, convert
 

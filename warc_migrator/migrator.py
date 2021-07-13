@@ -3,15 +3,11 @@ Migrate ARC 1.0/1.1 and WARC 0.17/0.18 to WARC 1.0 and validate it.
 """
 import os
 import subprocess
-import shutil
 import tempfile
 import click
-from warcio.bufferedreaders import DecompressingBufferedReader
 from warcio.exceptions import ArchiveLoadFailed
-from warcio.warcwriter import WARCWriter
-from warcio.archiveiterator import ArchiveIterator
 from xml_helpers.utils import decode_utf8
-from warc_migrator.warc_fixer import WarcFixer
+from warc_migrator.warc_fixer import WarcFixer, recompress_warc
 from warc_migrator.warctools_handler import convert, is_arc
 
 
@@ -61,7 +57,7 @@ def warc_migrator(source_path, target_path, meta):
                            target_name=os.path.basename(target_path))
 
     with tempfile.NamedTemporaryFile(prefix="warc-migrator.") if arc_file \
-            else open(source_path, 'rb') as source_buffer:
+            else open(source_path, "rb") as source_buffer:
         if arc_file:
             count = convert(source_path, source_buffer)
             source_buffer.seek(0)
@@ -70,25 +66,17 @@ def warc_migrator(source_path, target_path, meta):
             source = source_buffer
 
         try:
-            with open(target_path, 'wb') as target:
+            with open(target_path, "wb") as target:
                 recount = warc_fixer.fix_warc(source, target, arc_file)
         except ArchiveLoadFailed as err:
             if "ERROR: non-chunked gzip file detected" in str(err):
-                source.seek(0)
                 with tempfile.NamedTemporaryFile(prefix="warc-migrator.") as \
                         tmp_warc:
-                    with tempfile.TemporaryFile() as tmp_source:
-                        decomp = DecompressingBufferedReader(
-                            source, read_all_members=True)
-                        source.seek(0)
-                        shutil.copyfileobj(decomp, tmp_source)
-                        tmp_source.seek(0)
-                        _rewrite_warc(tmp_source, tmp_warc)
-                    tmp_warc.seek(0)
-                    with open(target_path, 'wb') as target:
+                    recompress_warc(source, tmp_warc)
+                    with open(target_path, "wb") as target:
                         recount = warc_fixer.fix_warc(tmp_warc, target, arc_file)
             else:
-                raise ArchiveLoadFailed(err)
+                raise
 
     if arc_file and recount != count:
         raise ValueError("Count mismatch, originally %s records, recounted "
@@ -105,22 +93,6 @@ def validate(warc_file):
     """
     _shell(["warcvalid", warc_file])
     _shell(["warcio", "check", warc_file])
-
-
-def _rewrite_warc(source, target):
-    """
-    Open a WARC file an rewrite it. This is used for fixing a compression
-    issue. Originally some implementations created warc compression in a
-    wrong way.
-
-    :source: Source file buffer
-    :target: Target file buffer
-    """
-    writer = WARCWriter(filebuf=target, gzip=True)
-    for record in ArchiveIterator(
-            source, no_record_parse=False,
-            arc2warc=False, verify_http=False):
-        writer.write_record(record)
 
 
 def _shell(command, stdout=subprocess.PIPE):
@@ -150,4 +122,4 @@ def _shell(command, stdout=subprocess.PIPE):
 
 
 if __name__ == '__main__':
-    warc_migrator_cli()
+    warc_migrator_cli()  # pylint: disable=no-value-for-parameter
