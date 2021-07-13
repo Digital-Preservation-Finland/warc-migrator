@@ -24,13 +24,14 @@ Install the required software to a virtual environment with commands::
     source venv/bin/activate
     pip install --upgrade pip setuptools
     pip install -r requirements_github.txt
+    pip install .
 
 Usage:
 ------
 
 Use the software with the following command::
 
-    python warc_migrator/migrator.py sourcefile targetfile [--meta fieldname value ...]
+    warc-migrator sourcefile targetfile [--meta fieldname value ...]
 
 The `sourcefile` must be existing ARC 1.0/1.1 or WARC 0.17/0.18 file.
 The `targetfile` must be a non-existing file.
