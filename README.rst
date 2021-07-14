@@ -87,19 +87,19 @@ Migration:
 
 3. The actual warcinfo payload will contain the following items:
 
-    3.1. The possible XML elements from ARC header, but in warcinfo format.
-         The migration collects ARC and Dublin Core (Dublin Core 1.1, DCTerms,
-         DCMIType) from the ARC metadata and uses the element name as warcinfo
-         field name (without namespace) and the elment's value as the
-         corresponding value.
-    3.2. The following fields, which will overwrite the possibly existing fields
-         with the same key added in step 3.1::
+    1. The possible XML elements from ARC header, but in warcinfo format.
+       The migration collects ARC and Dublin Core (Dublin Core 1.1, DCTerms,
+       DCMIType) from the ARC metadata and uses the element name as warcinfo
+       field name (without namespace) and the elment's value as the
+       corresponding value.
+    2. The following fields, which will overwrite the possibly existing fields
+       with the same key added in step 3.1::
 
-             conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
-             format: WARC File Format 1.0
+           conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
+           format: WARC File Format 1.0
 
-    3.3. User defined fields, which will overwrite the possibly existing fields 
-         with the same key added in steps 3.1 and 3.2.
+    3. User defined fields, which will overwrite the possibly existing fields 
+       with the same key added in steps 3.1 and 3.2.
 
 4. The actual ARC metadata payload is the ARC header including the possible XML metadata.
 
