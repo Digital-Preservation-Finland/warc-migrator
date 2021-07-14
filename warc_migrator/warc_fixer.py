@@ -37,6 +37,7 @@ def recompress_warc(source, target):
         target.seek(0)
 
 
+# pylint: disable=too-few-public-methods
 class WarcFixer(object):
     """
     Fix WARC file in various ways.
@@ -136,9 +137,17 @@ class WarcFixer(object):
             self.target.warcinfo[key] = value
         self.target.create_info_record(
             self.source.warcinfo_record.rec_headers, "warcinfo")
+
+        # We want to replace (or add, if missing) a few fields to WARC header.
+        # The header field is a (key, value) tuple and we do not know the
+        # actual values (filename and timestamp). THerefore, we first list
+        # them to remove those and then append.
+        remove_field = []
         for field in self.target.warcinfo_record.rec_headers.headers:
             if "WARC-Filename" in field or "WARC-Date" in field:
-                self.target.warcinfo_record.rec_headers.headers.remove(field)
+                remove_field.append(field)
+        for field in remove_field:
+            self.target.warcinfo_record.rec_headers.headers.remove(field)
         self.target.warcinfo_record.rec_headers.headers.append((
             "WARC-Filename", os.path.basename(self.target_name)))
         date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -188,12 +197,12 @@ class WarcFixer(object):
             self.source.append_metadata(meta)
             metadata = metadata + meta
         xml = ET.fromstring(metadata)
-        ns = {"arc": "http://archive.org/arc/1.0/",
-              "dc": "http://purl.org/dc/elements/1.1/",
-              "dcterms": "http://purl.org/dc/terms/",
-              "dcmitype": "http://purl.org/dc/dcmitype/"}
+        nspace = {"arc": "http://archive.org/arc/1.0/",
+                  "dc": "http://purl.org/dc/elements/1.1/",
+                  "dcterms": "http://purl.org/dc/terms/",
+                  "dcmitype": "http://purl.org/dc/dcmitype/"}
         arc_metadata = xml.xpath("//arc:* | //dc:* | //dcterms:* | //dcmitype:*",
-                                 namespaces=ns)
+                                 namespaces=nspace)
         for field in arc_metadata:
             tagname = field.tag.split("}")[1]
             if tagname != "arcmetadata":

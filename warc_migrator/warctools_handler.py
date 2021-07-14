@@ -44,9 +44,9 @@ def convert(infile, out):
     """
     count = 0
     arc = ArcTransformer()
-    fh = MixedRecord.open_archive(filename=infile, gzip="auto")
+    file_handler = MixedRecord.open_archive(filename=infile, gzip="auto")
     try:
-        for record in fh:
+        for record in file_handler:
             try:
                 warcs = arc.convert(record)
             except ValueError as err:
@@ -63,16 +63,18 @@ def convert(infile, out):
             count += len(warcs)
 
     finally:
-        fh.close()
+        file_handler.close()
 
     return count
 
 
+# pylint: disable=no-member
+# WarcRecord has constants in a decorator, which is not supoorted in pylint.
 def _process_empty_length_record(record, arc):
     """
     Convert record from ARC to WARC if record length is not given in ARC.
     The original Warctools can not handle the record, if length is empty.
-    This is a copied and stripped code from Warctools.
+    This is a copied and slightly modified code from Warctools.
 
     :record: Warctools' ARC record
     :arc: Warctools' ARC transformer
@@ -95,9 +97,9 @@ def _process_empty_length_record(record, arc):
     else:
         date = datetime.datetime.now()
 
-    ip = record.get_header(ArcRecord.IP)
-    if ip and ip.strip() != b"0.0.0.0":
-        headers.append((WarcRecord.IP_ADDRESS, ip.strip()))
+    host = record.get_header(ArcRecord.IP)
+    if host and host.strip() != b"0.0.0.0":
+        headers.append((WarcRecord.IP_ADDRESS, host.strip()))
 
     headers.append((WarcRecord.DATE, warc_datetime_str(date)))
 
