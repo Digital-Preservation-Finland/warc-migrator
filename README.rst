@@ -134,6 +134,7 @@ The migration is quite straightforward.
 
 3. The following header fields are added to all other records::
 
+    WARC/1.0
     WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
     WARC-Payload-Digest: <new payload sha1 sum in base32 encoded format>
 
