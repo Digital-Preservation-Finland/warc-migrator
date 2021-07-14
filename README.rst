@@ -41,6 +41,115 @@ given multiple times. The `fieldname` is the name of the warcinfo field and
 `value` is the contained metadata string. These fields are added to warcinfo
 record. The given field overwrites the possibly existing field.
 
+Migration:
+----------
+
+*Migration of ARC 1.0/1.1 files to WARC 1.0*
+
+1. Warcinfo record will have the following header::
+
+    WARC/1.0
+    WARC-Type: warcinfo
+    WARC-Record-ID: <new UUID>
+    WARC-Date: <timestamp of now>
+    WARC-Filename: <resulted WARC file name>
+    Content-Type: applcation/warc-fields
+    Content-Length: <length of warcinfo>
+    WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
+
+2. ARC metadata record will have the following header::
+
+    WARC/1.0
+    WARC-Type: metadata
+    WARC-Concurrent-To: <warcinfo's WARC-Record-ID>
+    WARC-Record-ID: <new UUID>
+    WARC-Target-URI: <original ARC filename stripped from ARC header>
+    WARC-Date: <original timestamp stripped from ARC header>
+    WARC-Warcinfo-ID: <warcinfo's WARC-Record-ID>
+    Content-Type: application/x-internet-archive
+    Content-Length: <length of metadata>
+    WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
+    WARC-Payload-Digest: <new payload sha1 sum in base32 encoded format>
+
+3. The records of the actual content will have the following header::
+
+    WARC/1.0
+    WARC-Record-ID: <new UUID>
+    WARC-Target-URI: <target URI>
+    WARC-Warcinfo-ID: <warcinfo's WARC-Record-ID>
+    WARC-IP-Address: <original IP address stripped from ARC record>
+    WARC-Date: <original date stripped from ARC record
+    WARC-Type: <type of record>
+    Content-Type: <original mimetype stripped from ARC record>
+    Content-Length: <original length stripped from arc record>
+    WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
+    WARC-Payload-Digest: <new payload sha1 sum in base32 encoded format>
+
+3. The actual warcinfo payload will contain the following items:
+
+    3.1. The possible XML elements from ARC header, but in warcinfo format.
+         The migration collects ARC and Dublin Core (Dublin Core 1.1, DCTerms,
+         DCMIType) from the ARC metadata and uses the element name as warcinfo
+         field name (without namespace) and the elment's value as the
+         corresponding value.
+    3.2. The following fields, which will overwrite the possibly existing fields
+         with the same key added in step 3.1::
+
+         conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
+         format: WARC File Format 1.0
+
+    3.3. User defined fields, which will overwrite the possibly existing fields 
+         with the same key added in steps 3.1 and 3.2.
+
+4. The actual ARC metadata payload is the ARC header including the possible XML metadata.
+
+5. The actual payload of the other records are direct copies of the payloads of
+   the original records, but those HTTP header values are URL encoded, which can
+   not be fitted to US-ASCII. This URL encoding rule applies also to the
+   description of the statusline.
+
+
+*Migration of WARC 0.17/0.18 files to WARC 1.0*
+
+1. The protocol is changed in all records to::
+
+    WARC/1.0
+
+2. The following WARC header fields are added or modified in warcinfo record,
+   other fields remain as is::
+
+    WARC/1.0
+    WARC-Date: <timestamp of now>
+    WARC-Filename: <resulted WARC file name>
+    WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
+
+3. The following header fields are added to all other records::
+
+    WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
+    WARC-Payload-Digest: <new payload sha1 sum in base32 encoded format>
+
+4. The following warcinfo fields are added or modified in warcinfo record,
+   other fields remain as is::
+
+    conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
+    format: WARC File Format 1.0
+
+5. The actual payload of the other records are direct copies of the payloads of
+   the original records, but those HTTP header values are URL encoded, which can
+   not be fitted to US-ASCII. This URL encoding rule applies also to the
+   description of the statusline.
+
+6. A separate metadata record is not created, as done in ARC migration above.
+
+*Other notes*
+
+1. The final file will be a compressed WARC file (.warc.gz)
+
+2. Some ARC and WARC files are origininally compressed with a single gzip compression,
+   with having all the records in the same compression. This disallows seeking. The
+   migration fixes these so that each record is gzipped one-by-one, which will
+   eventually create a multi-member gzip file.
+
 Copyright
 ---------
 Copyright (C) 2021 CSC - IT Center for Science Ltd.
