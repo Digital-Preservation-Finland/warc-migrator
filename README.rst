@@ -99,14 +99,14 @@ Migration:
            format: WARC File Format 1.0
 
     3. User defined fields, which will overwrite the possibly existing fields 
-       with the same key added in steps 3.1 and 3.2.
+       with the same key added in steps 3.1. and 3.2.
 
 4. The actual ARC metadata payload is the ARC header including the possible XML metadata.
 
-5. The actual payload of the other records are direct copies of the payloads of
+5. The actual payloads of the other records are direct copies of the payloads of
    the original records, but those HTTP header values are URL encoded, which can
    not be fitted to US-ASCII. This URL encoding rule applies also to the
-   description of the statusline.
+   description in the statusline.
 
 
 **Migration of WARC 0.17/0.18 files to WARC 1.0**
@@ -129,15 +129,21 @@ Migration:
     WARC-Payload-Digest: <new payload sha1 sum in base32 encoded format>
 
 4. The following warcinfo fields are added or modified in warcinfo record,
-   other fields remain as is::
+   other fields remain as is:
 
-    conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
-    format: WARC File Format 1.0
+    1. The following fields, which will overwrite the possibly existing fields
+       with the same key::
 
-5. The actual payload of the other records are direct copies of the payloads of
+           conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
+           format: WARC File Format 1.0
+
+    2. User defined fields, which will overwrite the possibly existing fields
+       with the same key.
+
+5. The actual payloads of the other records are direct copies of the payloads of
    the original records, but those HTTP header values are URL encoded, which can
    not be fitted to US-ASCII. This URL encoding rule applies also to the
-   description of the statusline.
+   description in the statusline.
 
 6. A separate metadata record is not created, as done in ARC migration above.
 
