@@ -1,4 +1,4 @@
-filedesc://valid_1.0.arc 0.0.0.0 20210615181500 text/plain 66
+filedesc://valid_1.0.arc 0.0.0.0 20210615181500 text/plain 65
 1 0 Test
 URL IP-address Archive-date Content-type Archive-length
 

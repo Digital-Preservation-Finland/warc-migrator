@@ -20,7 +20,7 @@ def test_is_arc():
     [
         ("valid_1.0.arc", 4),
         ("valid_1.1.arc", 4),
-        ("valid_1.0_missing_length.arc", 4)
+        ("invalid_1.0_missing_length.arc", 4)
     ]
 )
 def test_convert(testpath, infile, given_count):
