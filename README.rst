@@ -145,7 +145,7 @@ Migration:
 
 1. The final file will be a compressed WARC file (.warc.gz)
 
-2. Some ARC and WARC files are origininally compressed with a single gzip compression,
+2. Some ARC and WARC files are originally compressed with a single gzip compression,
    with having all the records in the same compression. This disallows seeking. The
    migration fixes these so that each record is gzipped one-by-one, which will
    eventually create a multi-member gzip file.
