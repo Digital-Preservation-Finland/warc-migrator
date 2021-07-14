@@ -44,7 +44,7 @@ record. The given field overwrites the possibly existing field.
 Migration:
 ----------
 
-*Migration of ARC 1.0/1.1 files to WARC 1.0*
+**Migration of ARC 1.0/1.1 files to WARC 1.0**
 
 1. Warcinfo record will have the following header::
 
@@ -95,8 +95,8 @@ Migration:
     3.2. The following fields, which will overwrite the possibly existing fields
          with the same key added in step 3.1::
 
-         conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
-         format: WARC File Format 1.0
+             conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
+             format: WARC File Format 1.0
 
     3.3. User defined fields, which will overwrite the possibly existing fields 
          with the same key added in steps 3.1 and 3.2.
@@ -109,7 +109,7 @@ Migration:
    description of the statusline.
 
 
-*Migration of WARC 0.17/0.18 files to WARC 1.0*
+**Migration of WARC 0.17/0.18 files to WARC 1.0**
 
 1. The protocol is changed in all records to::
 
@@ -141,7 +141,7 @@ Migration:
 
 6. A separate metadata record is not created, as done in ARC migration above.
 
-*Other notes*
+**Other notes**
 
 1. The final file will be a compressed WARC file (.warc.gz)
 
