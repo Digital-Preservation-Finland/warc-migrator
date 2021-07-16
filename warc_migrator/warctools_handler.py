@@ -6,8 +6,32 @@ software originally created by Hanzo Archives Ltd.
 
 For more information about Warctools, see
 https://github.com/internetarchive/warctools
+
+
+Warctools MIT license:
+
+Copyright (c) 2011-2012 Hanzo Archives Ltd
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included 
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import io
 import datetime
+
 from hanzo.arc2warc import ArcTransformer
 from hanzo.warctools.mixed import MixedRecord
 from hanzo.warctools.warc import WarcRecord, warc_datetime_str
@@ -43,22 +67,13 @@ def convert(infile, out):
     :out: WARC file handler
     """
     count = 0
-    arc = ArcTransformer()
+    arc = Arc2WarcTransformer()
     file_handler = MixedRecord.open_archive(filename=infile, gzip="auto")
     try:
         for record in file_handler:
-            try:
-                warcs = arc.convert(record)
-            except ValueError as err:
-                if "invalid literal for int() with base 10: ''" in str(err):
-                    warcs = _process_empty_length_record(record, arc)
-                    for warcrecord in warcs:
-                        warcrecord.write_to(out, gzip=False)
-                else:
-                    raise
-            else:
-                for warcrecord in warcs:
-                    warcrecord.write_to(out, gzip=False)
+            warcs = arc.convert(record)
+            for warcrecord in warcs:
+                warcrecord.write_to(out, gzip=False)
 
             count += len(warcs)
 
@@ -68,58 +83,111 @@ def convert(infile, out):
     return count
 
 
-# pylint: disable=no-member
-# WarcRecord has constants in a decorator, which is not supoorted in pylint.
-def _process_empty_length_record(record, arc):
+def is_http_response(content):
     """
-    Convert record from ARC to WARC if record length is not given in ARC.
-    The original Warctools can not handle the record, if length is empty.
-    This is a copied and slightly modified code from Warctools.
+    Check if the content is a HTTP response.
 
-    :record: Warctools' ARC record
-    :arc: Warctools' ARC transformer
-    :returns: Warctools' WARC record
+    The same function is in Warctools, but it raises a ValueError if the
+    Content-Length field is empty in HTTP header. Here we first read the HTTTP
+    haader, and if empty Content-Length is found, it will be ignored.
+
+    :content: Record cotent
+    :returns: True if the content is HTTP response, False otherwise
     """
-    warc_id = arc.make_warc_uuid(record.url+record.date)
-    headers = [
-        (WarcRecord.ID, warc_id),
-        (WarcRecord.URL, record.url),
-        (WarcRecord.WARCINFO_ID, arc.warcinfo_id),
-    ]
-
-    if record.date:
-        try:
-            date = datetime.datetime.strptime(record.date.decode(
-                'ascii'), '%Y%m%d%H%M%S')
-        except ValueError:
-            date = datetime.datetime.strptime(record.date.decode(
-                'ascii'), '%Y%m%d')
+    empty_length = False
+    content_buffer = io.BytesIO(content)
+    for line in content_buffer:
+        if line.strip() == b"Content-Length:":
+            empty_length = True
+            break
+        if len(line.strip()) == 0:
+            break
+    if empty_length:
+        message = ResponseMessage(RequestMessage(),
+                                  ignore_headers=["Content-Length"])
     else:
-        date = datetime.datetime.now()
+        message = ResponseMessage(RequestMessage())
 
-    host = record.get_header(ArcRecord.IP)
-    if host and host.strip() != b"0.0.0.0":
-        headers.append((WarcRecord.IP_ADDRESS, host.strip()))
-
-    headers.append((WarcRecord.DATE, warc_datetime_str(date)))
-
-    content_type, content = record.content
-
-    if not content_type.strip():
-        content_type = b'application/octet-stream'
-
-    message = ResponseMessage(RequestMessage(),
-                              ignore_headers=["Content-Length"])
     remainder = message.feed(content)
     message.close()
+    return message.complete() and not remainder
 
-    if message.complete() and not remainder:
-        content_type = b"application/http;msgtype=response"
-        record_type = WarcRecord.RESPONSE
-    else:
-        record_type = WarcRecord.RESOURCE
 
-    headers.append((WarcRecord.TYPE, record_type))
+# pylint: disable=no-member, too-many-branches, trailing-comma-tuple
+# WarcRecord has constants in a decorator, which is not supoorted in pylint.
+class Arc2WarcTransformer(ArcTransformer):
+    """
+    Override Warctools class ArcTransformer.
+    """
 
-    return WarcRecord(headers=headers, content=(content_type, content),
-                      version=arc.version),
+    def convert_record(self, record):
+        """
+        Convert ARC record to WARC.
+
+        This method overrides ArcTransformer.convert_record() found in
+        Warctools. This method is no different from the method it
+        overrides (except some style fixes), but here it uses the
+        is_http_response() function defined in this module.
+
+        :record: ARC record
+        :returns: Converted WARC record(s)
+        """
+        warc_id = self.make_warc_uuid(record.url+record.date)
+        headers = [
+            (WarcRecord.ID, warc_id),
+            (WarcRecord.URL,record.url),
+            (WarcRecord.WARCINFO_ID, self.warcinfo_id),
+        ]
+
+        if record.date:
+            try:
+                date = datetime.datetime.strptime(
+                    record.date.decode('ascii'),'%Y%m%d%H%M%S')
+            except ValueError:
+                date = datetime.datetime.strptime(
+                    record.date.decode('ascii'),'%Y%m%d')
+        else:
+            date = datetime.datetime.now()
+
+        host = record.get_header(ArcRecord.IP)
+        if host:
+            host = host.strip()
+            if host != b"0.0.0.0":
+                headers.append((WarcRecord.IP_ADDRESS, host))
+
+        headers.append((WarcRecord.DATE, warc_datetime_str(date)))
+
+        content_type, content = record.content
+
+        if not content_type.strip():
+            content_type = b'application/octet-stream'
+
+        url = record.url.lower()
+
+        if any(url.startswith(p) for p in self.resources):
+            record_type = WarcRecord.RESOURCE
+        elif any(url.startswith(p) for p in self.responses):
+            record_type = WarcRecord.RESPONSE
+        elif url.startswith(b'http'):
+            if is_http_response(content):
+                content_type=b"application/http;msgtype=response"
+                record_type = WarcRecord.RESPONSE
+            else:
+                record_type = WarcRecord.RESOURCE
+        elif url.startswith(b'dns'):
+            if content_type.startswith(b'text/dns') and \
+                    str(content.decode('ascii', 'ignore')) == content:
+                record_type = WarcRecord.RESOURCE
+            else:
+                record_type = WarcRecord.RESPONSE
+        else:
+            # unknown protocol
+            record_type = WarcRecord.RESPONSE
+
+        headers.append((WarcRecord.TYPE, record_type))
+
+        warcrecord = WarcRecord(
+            headers=headers, content=(content_type, content),
+            version=self.version)
+
+        return warcrecord,
