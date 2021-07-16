@@ -8,7 +8,7 @@ setup(
     include_package_data=True,
     version=__version__,
     install_requires=[
-        "click"
+        "click", "warcio", "warctools", "six", "lxml"
     ],
     entry_points={'console_scripts': [
         'warc-migrator=warc_migrator.migrator:warc_migrator_cli']},

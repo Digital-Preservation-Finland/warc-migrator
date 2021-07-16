@@ -23,10 +23,10 @@ def test_is_arc():
         ("invalid_1.0_missing_length.arc", 4)
     ]
 )
-def test_convert(testpath, infile, given_count):
+def test_convert(infile, given_count, tmpdir):
     """
     Test conversion from ARC to WARC.
     """
-    with open(os.path.join(testpath, "warc.warc.gz"), "wb") as out:
-        count = convert(os.path.join("tests/data", infile), out)
+    out = tmpdir.mkdir("warc-migrator").join("warc.warc.gz").open("wb")
+    count = convert(os.path.join("tests/data", infile), out)
     assert count == given_count

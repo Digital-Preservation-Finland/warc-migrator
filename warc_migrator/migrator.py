@@ -12,30 +12,33 @@ from warc_migrator.warctools_handler import convert, is_arc
 
 
 @click.command()
-@click.argument("source_path", metavar="SOURCE", type=click.Path(exists=True))
-@click.argument("target_path", metavar="TARGET", type=click.Path(exists=False))
+@click.argument("source_path", metavar="SOURCE",
+                type=click.Path(exists=True))
+@click.argument("target_path", metavar="TARGET",
+                type=click.Path(exists=False))
 @click.option("--meta", nargs=2, type=str, multiple=True,
               metavar="<NAME> <VALUE>", default=(),
-              help="Warcinfo field name and value to be added to the WARC file."
-                   "Overwrites existing field.")
+              help="Warcinfo field name and value to be added to the WARC "
+                   "file. Overwrites existing field.")
 def warc_migrator_cli(source_path, target_path, meta):
     """
     WARC Migrator.
 
     Convert ARC 1.0/1.1 or WARC 0.17/0.18 file to WARC 1.0 and adds given
-    metadata fields to warcinfo, but only, if the given fields are originally
-    missing. The resulted file will be a gzipped WARC file. This tool also
-    validates the resulted file.
+    metadata fields to warcinfo. The given fields overwrite the possibly
+    existing fields of the same keys. The resulted file will be a gzipped
+    WARC file. This tool also validates the resulted file.
 
     \b
     SOURCE: Source arc or warc file
     TARGET: Target file (warc.gz)
     """
     # \b above is for help formatting of click library
-    warc_migrator(source_path, target_path, meta)
+    migrate_to_warc(source_path, target_path, meta)
+    click.echo("Wrote the migrated warc into {}".format(target_path))
 
 
-def warc_migrator(source_path, target_path, meta):
+def migrate_to_warc(source_path, target_path, meta):
     """
     Migrate archive file to WARC 1.0.
 
@@ -82,28 +85,26 @@ def warc_migrator(source_path, target_path, meta):
         raise ValueError("Count mismatch, originally %s records, recounted "
                          "%s records." % (count, recount))
 
-    validate(target_path)
+    run_validation("warctools", target_path)
+    run_validation("warcio", target_path)
 
 
-def validate(warc_file):
+def run_validation(tool, filename, stdout=subprocess.PIPE):
     """
-    Validate given WARC file.
+    Validate the WARC file.
 
-    :warc_file: WARC filename
-    """
-    _shell(["warcvalid", warc_file])
-    _shell(["warcio", "check", warc_file])
-
-
-def _shell(command, stdout=subprocess.PIPE):
-    """
-    Run the given command in shell.
-
-    :command: Given command
+    :tool: Tool used for validation
+    :filename: WARC file
     :stdout: Output stream for stdout
     :returns: Tuple of (returncode, stdout, stderr)
-    :raises: ValueError if return code of command run in shell is not 0
+    :raises: ValidationException if return code is not 0
     """
+    if tool == "warctools":
+        command = ["warcvalid", filename]
+    elif tool == "warcio":
+        command = ["warcio", "check", filename]
+    else:
+        raise ValidationError("Undefined tool %s." % tool)
     proc = subprocess.Popen(command, stdout=stdout, stderr=subprocess.PIPE,
                             shell=False, env=os.environ.copy())
     (stdout, stderr) = proc.communicate()
@@ -117,8 +118,13 @@ def _shell(command, stdout=subprocess.PIPE):
         error = "\n".join(
             ["Failed: returncode %s" % returncode, decode_utf8(stdout),
              decode_utf8(stderr)])
-        raise ValueError(error)
+        raise ValidationError(error)
     return (returncode, stdout, stderr)
+
+
+class ValidationError(Exception):
+    """Exception class for ValidationError"""
+    pass
 
 
 if __name__ == '__main__':

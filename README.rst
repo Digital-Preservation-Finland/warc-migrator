@@ -60,7 +60,7 @@ XML metadata.
     WARC-Record-ID: <new UUID>
     WARC-Date: <timestamp of now>
     WARC-Filename: <resulted WARC file name>
-    Content-Type: applcation/warc-fields
+    Content-Type: application/warc-fields
     Content-Length: <length of warcinfo>
     WARC-Block-Digest: <new block sha1 sum in base32 encoded format>
 
@@ -164,7 +164,9 @@ The migration is quite straightforward.
 2. Some ARC and WARC files are originally compressed with a single gzip compression,
    with having all the records in the same compression. This disallows seeking. The
    migration fixes these so that each record is gzipped one-by-one, which will
-   eventually create a multi-member gzip file.
+   eventually create a multi-member gzip file. The reason of this single gzipping
+   comes from older files, probably from the time when WARC specification was still
+   a work-in-progess.
 
 Copyright
 ---------

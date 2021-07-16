@@ -3,7 +3,8 @@ Test the WARC migrator.
 """
 import os
 import pytest
-from warc_migrator.migrator import warc_migrator, validate
+from warc_migrator.migrator import (migrate_to_warc, run_validation,
+                                    ValidationError)
 
 
 @pytest.mark.parametrize(
@@ -25,20 +26,23 @@ from warc_migrator.migrator import warc_migrator, validate
 
     ]
 )
-def test_warc_migrator(source, meta, testpath):
+def test_migrate_to_warc(source, meta, tmpdir):
     """
     Test the main migrator.
     Will raise an exception, if the result is not valid.
     """
-    target = os.path.join(testpath, "warc.warc.gz")
+    target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
     source = os.path.join("tests/data", source)
-    warc_migrator(source, target, meta)
+    migrate_to_warc(source, target, meta)
 
 
-def test_validate():
+def test_run_validation():
     """
-    Validate warc file.
+    Test warc file validation.
     """
-    validate("tests/data/valid_1.0.warc.gz")
-    with pytest.raises(ValueError):
-        validate("tests/data/invalid_1.0.warc")
+    run_validation("warctools", "tests/data/valid_1.0.warc.gz")
+    run_validation("warcio", "tests/data/valid_1.0.warc.gz")
+    with pytest.raises(ValidationError):
+        run_validation("warctools", "tests/data/invalid_1.0.warc")
+    with pytest.raises(ValidationError):
+        run_validation("warcio", "tests/data/invalid_1.0.warc")

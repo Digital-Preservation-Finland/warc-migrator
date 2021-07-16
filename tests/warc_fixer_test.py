@@ -16,17 +16,16 @@ from warc_migrator.warc_fixer import WarcFixer
         ("valid_1.0_warctools_resulted.warc", True, 4)
     ]
 )
-def test_fix_warc(infile, arc_data, given_count, testpath):
+def test_fix_warc(infile, arc_data, given_count, tmpdir):
     """
     Test warc fixing.
     """
     infile_path = os.path.join("tests/data", infile)
-    result_file = os.path.join(testpath, "warc.warc.gz")
     given_warcinfo = {"info1": "infovalue1", "info2": "infovalue2"}
+    out = tmpdir.mkdir("warc-migrator").join("warc.warc.gz").open("wb")
     warc_fixer = WarcFixer(given_warcinfo, "warc.warc.gz")
     with open(infile_path, "rb") as filein:
-        with open(result_file, "wb") as out:
-            count = warc_fixer.fix_warc(filein, out, arc_data)
+        count = warc_fixer.fix_warc(filein, out, arc_data)
     assert count == given_count
     assert warc_fixer.target.warcinfo["info1"] == "infovalue1"
     assert warc_fixer.target.warcinfo["info2"] == "infovalue2"

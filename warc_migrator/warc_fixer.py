@@ -24,17 +24,14 @@ def recompress_warc(source, target):
     :target: Target file buffer
     """
     source.seek(0)
-    with tempfile.TemporaryFile() as tmp_source:
-        decomp_buff = DecompressingBufferedReader(
-            source, read_all_members=True)
-        shutil.copyfileobj(decomp_buff, tmp_source)
-        tmp_source.seek(0)
-        writer = WARCWriter(filebuf=target, gzip=True)
-        for record in ArchiveIterator(
-                tmp_source, no_record_parse=False,
-                arc2warc=False, verify_http=False):
-            writer.write_record(record)
-        target.seek(0)
+    decomp_buff = DecompressingBufferedReader(
+        source, read_all_members=True)
+    writer = WARCWriter(filebuf=target, gzip=True)
+    for record in ArchiveIterator(
+            decomp_buff, no_record_parse=False,
+            arc2warc=False, verify_http=False):
+        writer.write_record(record)
+    target.seek(0)
 
 
 # pylint: disable=too-few-public-methods
@@ -124,7 +121,7 @@ class WarcFixer(object):
     def _fix_warcinfo(self):
         """
         Fixes WARC's warcinfo record in various ways:
-        - Rewrite comformsTo and format fields in warcinfo.
+        - Rewrite conformsTo and format fields in warcinfo.
         - Add user given fields. Overwrites, if exists.
         - Rewrite WARC-Date and WARC-Filename fields from the header.
         """
