@@ -35,6 +35,7 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
     source = os.path.join("tests/data", source)
     count = migrate_to_warc(source, target, meta)
     assert count == real_count
+    assert os.path.isfile(target)
 
 
 def test_run_validation():
