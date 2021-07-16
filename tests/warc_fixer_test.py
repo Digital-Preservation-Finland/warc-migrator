@@ -9,14 +9,14 @@ from warc_migrator.warc_fixer import WarcFixer
 
 
 @pytest.mark.parametrize(
-    ["infile", "arc_data", "given_count"],
+    ["infile", "orig_arc", "given_count"],
     [
         ("valid_0.17.warc", False, 2),
         ("valid_0.17_scandinavian.warc", False, 2),
         ("valid_1.0_warctools_resulted.warc", True, 4)
     ]
 )
-def test_fix_warc(infile, arc_data, given_count, tmpdir):
+def test_fix_warc(infile, orig_arc, given_count, tmpdir):
     """
     Test warc fixing.
     """
@@ -25,7 +25,11 @@ def test_fix_warc(infile, arc_data, given_count, tmpdir):
     out = tmpdir.mkdir("warc-migrator").join("warc.warc.gz").open("wb")
     warc_fixer = WarcFixer(given_warcinfo, "warc.warc.gz")
     with open(infile_path, "rb") as filein:
-        count = warc_fixer.fix_warc(filein, out, arc_data)
+        if orig_arc:
+            count = warc_fixer.fix_warc_migrated(filein, out)
+        else:
+            count = warc_fixer.fix_warc_original(filein, out)
+
     assert count == given_count
     assert warc_fixer.target.warcinfo["info1"] == "infovalue1"
     assert warc_fixer.target.warcinfo["info2"] == "infovalue2"

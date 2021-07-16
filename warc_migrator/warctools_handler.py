@@ -97,14 +97,15 @@ def is_http_response(content):
     empty_length = False
     content_buffer = io.BytesIO(content)
     for line in content_buffer:
-        if line.strip() == b"Content-Length:":
+        if line.strip().lower() == b'content-length:':
             empty_length = True
             break
         if len(line.strip()) == 0:
             break
+
     if empty_length:
         message = ResponseMessage(RequestMessage(),
-                                  ignore_headers=["Content-Length"])
+                                  ignore_headers=[b"Content-Length"])
     else:
         message = ResponseMessage(RequestMessage())
 

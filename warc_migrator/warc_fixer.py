@@ -63,13 +63,20 @@ class WarcFixer(object):
         self.given_warcinfo = given_warcinfo
         self.target_name = target_name
 
-    def fix_warc(self, source_handler, target_handler, arc_file):
+    def fix_warc_migrated(self, source_handler, target_handler):
         """
-        Fix WARC file in various ways, see class comment for details.
+        Fix WARC file migrated from ARC 1.0/1.1 file.
+        - Convert possible ARC XML metadata to warcinfo
+        - Fix mimetype in ARC metadata record
+        - Change protocol in all records to WARC/1.0
+        - If necessary, URL encode HTTP header in the record
+        - Compute block and payload digests
+        - Update filename and timestamp in WARC header
+        - Update warcinfo with user-defined fields and to meet WARC 1.0 spec
 
         :source_handler: Source file handler
         :target_handler: Target file handler
-        :arc_file: True for original ARC file, False for original WARC file
+        :return: Count of written records
         """
         count = 0
         warcinfo_fixed = False
@@ -79,7 +86,7 @@ class WarcFixer(object):
                                       no_record_parse=False,
                                       verify_http=False, arc2warc=False,
                                       ensure_http_headers=False):
-            if arc_file and not warcinfo_fixed:
+            if not warcinfo_fixed:
                 if record.rec_type == "warcinfo" and \
                         record.content_type == "application/warc-fields":
                     self.source.set_warcinfo_record(record)
@@ -93,7 +100,35 @@ class WarcFixer(object):
                     warc_writer.write_record(self.target.metadata_record)
                     count += 2
                     warcinfo_fixed = True
-            elif not arc_file and record.rec_type == "warcinfo" and \
+            else:
+                self._fix_warc_data_record(record)
+                warc_writer.write_record(record)
+                count += 1
+
+        return count
+
+    def fix_warc_original(self, source_handler, target_handler):
+        """
+        Fix WARC 0.17/0.18 file.
+        - Change protocol in all records to WARC/1.0
+        - If necessary, URL encode HTTP header in the record
+        - Compute block and payload digests
+        - Update filename and timestamp in WARC header
+        - Update warcinfo with user-defined fields and to meet WARC 1.0 spec
+
+        :source_handler: Source file handler
+        :target_handler: Target file handler
+        :return: Count of written records
+        """
+        count = 0
+        warcinfo_fixed = False
+        warc_writer = WARCWriter(target_handler, warc_version="1.0",
+                                 gzip=True)
+        for record in ArchiveIterator(fileobj=source_handler,
+                                      no_record_parse=False,
+                                      verify_http=False, arc2warc=False,
+                                      ensure_http_headers=False):
+            if record.rec_type == "warcinfo" and \
                     record.content_type == "application/warc-fields" and \
                     not warcinfo_fixed:
                 self.source.set_warcinfo_record(record)
@@ -103,20 +138,29 @@ class WarcFixer(object):
                 count += 1
                 warcinfo_fixed = True
             else:
-                record.rec_headers.protocol = "WARC/1.0"
-                if record.http_headers:
-                    status = record.http_headers.statusline.split(" ", 1)
-                    if len(status) > 1:
-                        try:
-                            status[1].encode('ascii')
-                        except (UnicodeEncodeError, UnicodeDecodeError):
-                            record.http_headers.statusline = " ".join(
-                                [status[0],
-                                 six.moves.urllib.parse.quote(status[1])])
+                self._fix_warc_data_record(record)
                 warc_writer.write_record(record)
                 count += 1
 
         return count
+
+    def _fix_warc_data_record(self, record):
+        """
+        Fix WARC data record, other than warcinfo of ARC mewtadata record.
+        - Change protocol to WARC/1.0
+        - If necessary, URL encode HTTP header in the record
+
+        :record: WARC data record
+        """
+        record.rec_headers.protocol = "WARC/1.0"
+        if record.http_headers:
+            status = record.http_headers.statusline.split(" ", 1)
+            if len(status) > 1:
+                try:
+                    status[1].encode('ascii')
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    record.http_headers.statusline = " ".join(
+                        [status[0], six.moves.urllib.parse.quote(status[1])])
 
     def _fix_warcinfo(self):
         """
