@@ -3,7 +3,7 @@ Test the WARC migrator.
 """
 import os
 import pytest
-from warc_migrator.migrator import (migrator, run_validation,
+from warc_migrator.migrator import (migrate_to_warc, run_validation,
                                     ValidationError)
 
 
@@ -26,14 +26,14 @@ from warc_migrator.migrator import (migrator, run_validation,
 
     ]
 )
-def test_migrator(source, meta, real_count, tmpdir):
+def test_migrate_to_warc(source, meta, real_count, tmpdir):
     """
     Test the main migrator.
     Will raise an exception, if the result is not valid.
     """
     target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
     source = os.path.join("tests/data", source)
-    count = migrator(source, target, meta)
+    count = migrate_to_warc(source, target, meta)
     assert count == real_count
 
 

@@ -34,12 +34,12 @@ def warc_migrator_cli(source_path, target_path, meta):
     TARGET: Target file (warc.gz)
     """
     # \b above is for help formatting of click library
-    count = migrator(source_path, target_path, meta)
+    count = migrate_to_warc(source_path, target_path, meta)
     click.echo("Wrote the migrated warc into {} with {} records.".format(
         target_path, count))
 
 
-def migrator(source_path, target_path, meta):
+def migrate_to_warc(source_path, target_path, meta):
     """
     Migrate archive file to WARC 1.0.
 
