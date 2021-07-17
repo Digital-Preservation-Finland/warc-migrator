@@ -104,7 +104,14 @@ def run_validation(tool, filename, stdout=subprocess.PIPE):
 
 class ValidationError(Exception):
     """Exception class for ValidationError"""
-    pass
+
+    def __init__(self, error):
+        """Initialize"""
+        self.error = error
+
+    def __str__(self):
+        """String representation"""
+        return repr(self.error)
 
 
 class WarcMigrator(object):
