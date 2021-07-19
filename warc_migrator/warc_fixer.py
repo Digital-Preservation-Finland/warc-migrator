@@ -183,12 +183,9 @@ class WarcFixer(object):
         # The header field is a (key, value) tuple and we do not know the
         # actual values (filename and timestamp). THerefore, we first list
         # them to remove those and then append.
-        remove_field = []
-        for field in self.target.warcinfo_record.rec_headers.headers:
+        for field in list(self.target.warcinfo_record.rec_headers.headers):
             if "WARC-Filename" in field or "WARC-Date" in field:
-                remove_field.append(field)
-        for field in remove_field:
-            self.target.warcinfo_record.rec_headers.headers.remove(field)
+                self.target.warcinfo_record.rec_headers.headers.remove(field)
         self.target.warcinfo_record.rec_headers.headers.append((
             "WARC-Filename", os.path.basename(self.target_name)))
         date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
