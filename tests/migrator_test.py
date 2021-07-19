@@ -3,8 +3,11 @@ Test the WARC migrator.
 """
 import os
 import pytest
+
+from click.testing import CliRunner
+
 from warc_migrator.migrator import (migrate_to_warc, run_validation,
-                                    ValidationError)
+                                    ValidationError, warc_migrator_cli)
 
 
 @pytest.mark.parametrize(
@@ -50,3 +53,23 @@ def test_run_validation():
         run_validation("warctools", "tests/data/invalid_1.0.warc")
     with pytest.raises(ValidationError):
         run_validation("warcio", "tests/data/invalid_1.0.warc")
+
+
+def test_migration_cli(tmpdir):
+    """
+    Ensure that the command line interface for migrating warcs works.
+
+    Only the basic functionality is tested at the moment:
+      - command takes an input and output paths
+      - command runs successfully
+      - command writes something into the output file
+      - command outputs a message that corresponds to what we expect to have
+        happened
+    """
+    outfile = tmpdir.join("out.warc.gz")
+    result = CliRunner().invoke(warc_migrator_cli,
+                                ["tests/data/valid_1.0.warc.gz", str(outfile)])
+    assert result.exit_code == 0
+    assert outfile.isfile()
+    assert "Wrote the migrated warc into" in result.output
+    assert "out.warc.gz with 4 records." in result.output
