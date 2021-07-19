@@ -66,10 +66,25 @@ def test_migration_cli(tmpdir):
       - command outputs a message that corresponds to what we expect to have
         happened
     """
-    outfile = tmpdir.join("out.warc.gz")
+    outfile = tmpdir / "out.warc.gz"
     result = CliRunner().invoke(warc_migrator_cli,
                                 ["tests/data/valid_1.0.warc.gz", str(outfile)])
     assert result.exit_code == 0
     assert outfile.isfile()
     assert "Wrote the migrated warc into" in result.output
     assert "out.warc.gz with 4 records." in result.output
+
+
+def test_migrate_to_warc_refuse_to_overwrite(tmpdir):
+    """
+    Ensure that the migration command won't overwrite existing files.
+    """
+    outfile = tmpdir / "out.warc.gz"
+    outfile_content = "this should not be altered"
+    outfile.write(outfile_content)
+
+    with pytest.raises(OSError) as err:
+        migrate_to_warc("tests/data/valid_1.0.warc.gz", str(outfile), {})
+
+    assert "Target file already exists" in str(err)
+    assert outfile.read() == outfile_content
