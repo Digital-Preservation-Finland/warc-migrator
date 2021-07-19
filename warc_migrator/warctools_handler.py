@@ -12,22 +12,23 @@ Warctools MIT license:
 
 Copyright (c) 2011-2012 Hanzo Archives Ltd
 
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included 
-in all copies or substantial portions of the Software.
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER 
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION 
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 """
 import io
 import datetime
@@ -100,6 +101,9 @@ def is_http_response(content):
         if line.strip().lower() == b'content-length:':
             empty_length = True
             break
+
+        # This is the way Warctools did it, not going to alter functionality
+        # pylint: disable=len-as-condition
         if len(line.strip()) == 0:
             break
 
@@ -136,17 +140,17 @@ class Arc2WarcTransformer(ArcTransformer):
         warc_id = self.make_warc_uuid(record.url+record.date)
         headers = [
             (WarcRecord.ID, warc_id),
-            (WarcRecord.URL,record.url),
+            (WarcRecord.URL, record.url),
             (WarcRecord.WARCINFO_ID, self.warcinfo_id),
         ]
 
         if record.date:
             try:
                 date = datetime.datetime.strptime(
-                    record.date.decode('ascii'),'%Y%m%d%H%M%S')
+                    record.date.decode('ascii'), '%Y%m%d%H%M%S')
             except ValueError:
                 date = datetime.datetime.strptime(
-                    record.date.decode('ascii'),'%Y%m%d')
+                    record.date.decode('ascii'), '%Y%m%d')
         else:
             date = datetime.datetime.now()
 
@@ -171,7 +175,7 @@ class Arc2WarcTransformer(ArcTransformer):
             record_type = WarcRecord.RESPONSE
         elif url.startswith(b'http'):
             if is_http_response(content):
-                content_type=b"application/http;msgtype=response"
+                content_type = b"application/http;msgtype=response"
                 record_type = WarcRecord.RESPONSE
             else:
                 record_type = WarcRecord.RESOURCE

@@ -3,8 +3,6 @@ Fix produced WARC file to WARC 1.0.
 """
 import os
 import datetime
-import shutil
-import tempfile
 from copy import deepcopy
 import six
 import lxml.etree as ET
@@ -12,6 +10,10 @@ from warcio.warcwriter import WARCWriter
 from warcio.archiveiterator import ArchiveIterator
 from warcio.bufferedreaders import DecompressingBufferedReader
 from warc_migrator.archive_handler import ArchiveHandler
+
+
+# Pylint doesn't know what members lxml.etree has or doesn't have
+# pylint: disable=c-extension-no-member
 
 
 def recompress_warc(source, target):
@@ -152,6 +154,7 @@ class WarcFixer(object):
 
         :record: WARC data record
         """
+        # pylint: disable=no-self-use
         record.rec_headers.protocol = "WARC/1.0"
         if record.http_headers:
             status = record.http_headers.statusline.split(" ", 1)
@@ -179,18 +182,20 @@ class WarcFixer(object):
         self.target.create_info_record(
             self.source.warcinfo_record.rec_headers, "warcinfo")
 
+        record_headers = self.target.warcinfo_record.rec_headers
+
         # We want to replace (or add, if missing) a few fields to WARC header.
         # The header field is a (key, value) tuple and we do not know the
-        # actual values (filename and timestamp). THerefore, we first list
+        # actual values (filename and timestamp). Therefore, we first list
         # them to remove those and then append.
-        for field in list(self.target.warcinfo_record.rec_headers.headers):
+        for field in list(record_headers.headers):
             if "WARC-Filename" in field or "WARC-Date" in field:
-                self.target.warcinfo_record.rec_headers.headers.remove(field)
-        self.target.warcinfo_record.rec_headers.headers.append((
+                record_headers.headers.remove(field)
+        record_headers.headers.append((
             "WARC-Filename", os.path.basename(self.target_name)))
         date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-        self.target.warcinfo_record.rec_headers.headers.append(("WARC-Date", date))
-        self.target.warcinfo_record.rec_headers.protocol = "WARC/1.0"
+        record_headers.headers.append(("WARC-Date", date))
+        record_headers.protocol = "WARC/1.0"
 
     def _fix_metadata(self):
         """
@@ -218,7 +223,8 @@ class WarcFixer(object):
     def _extract_arc_metadata(self):
         """
         Create warcinfo from ARC metadata in WARC metadata record.
-        Supports ARC and Dublin Core (DC 1.1, DC Terms, DCMIType) metadata fields.
+        Supports ARC and Dublin Core (DC 1.1, DC Terms, DCMIType) metadat
+        fields.
         """
         line = b""
         metadata = b""
@@ -239,8 +245,9 @@ class WarcFixer(object):
                   "dc": "http://purl.org/dc/elements/1.1/",
                   "dcterms": "http://purl.org/dc/terms/",
                   "dcmitype": "http://purl.org/dc/dcmitype/"}
-        arc_metadata = xml.xpath("//arc:* | //dc:* | //dcterms:* | //dcmitype:*",
-                                 namespaces=nspace)
+        arc_metadata = xml.xpath(
+            "//arc:* | //dc:* | //dcterms:* | //dcmitype:*",
+            namespaces=nspace)
         for field in arc_metadata:
             tagname = field.tag.split("}")[1]
             if tagname != "arcmetadata":

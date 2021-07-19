@@ -47,6 +47,10 @@ def test_fix_warc(infile, orig_arc, given_count, tmpdir):
     assert found
 
 
+# Testing private functions here
+# pylint: disable=protected-access
+
+
 def test_fix_warcinfo():
     """
     Test fixing warcinfo to meet WARC 1.0 specifications.
@@ -127,8 +131,8 @@ def test_extract_warcinfo():
 
 def test_extract_arc_metadata():
     """
-    Test ARC metadata extracting to warcinfo from a warc file directlt created by
-    Warctools.
+    Test ARC metadata extracting to warcinfo from a warc file directly created
+    by Warctools.
     """
     warc_fixer = WarcFixer({}, "test.warc.gz")
     with open("tests/data/valid_1.0_warctools_resulted.warc", "rb") as \

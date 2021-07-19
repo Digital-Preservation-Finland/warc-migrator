@@ -39,6 +39,7 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
     assert count == real_count
     assert os.path.isfile(target)
 
+
 def test_run_validation():
     """
     Test warc file validation.

@@ -102,5 +102,6 @@ class ArchiveHandler(object):
                 value = " " + value
             if not value.endswith("\r\n"):
                 value = value + "\r\n"
-            payload = payload + b"%s:%s" % (encode_utf8(key), encode_utf8(value))
+            payload = payload + b"%s:%s" % (encode_utf8(key),
+                                            encode_utf8(value))
         return payload

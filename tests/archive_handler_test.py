@@ -1,8 +1,9 @@
 """
 Test the methods of ArchiveHandler
 """
-from warc_migrator.archive_handler import ArchiveHandler
 from warcio.statusandheaders import StatusAndHeaders
+
+from warc_migrator.archive_handler import ArchiveHandler
 
 
 def test_archive_handler():
@@ -50,6 +51,8 @@ def test_make_warcinfo_payload():
     """
     Test converting the warcinfo dict to byte payload.
     """
+    # We are testing a private function here
+    # pylint: disable=protected-access
     archive = ArchiveHandler()
     archive.warcinfo = {"info1": "infovalue1", "info2": "infovalue2"}
     payload = archive._make_warcinfo_payload()

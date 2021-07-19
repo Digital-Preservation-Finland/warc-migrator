@@ -170,13 +170,12 @@ class WarcMigrator(object):
                 source_buffer:
             count = convert(self.source_path, source_buffer)
             source_buffer.seek(0)
-            source = source_buffer
 
             recount = self._fix_warc_file(source_buffer, True)
 
         if recount != count:
-            raise ValueError("Count mismatch, originally %s records, recounted "
-                             "%s records." % (count, recount))
+            raise ValueError("Count mismatch, originally %s records, "
+                             "recounted %s records." % (count, recount))
 
         return recount
 
