@@ -1,41 +1,11 @@
-stages:
-  - local-test
+---
 
-static-analysis:
-  stage: local-test
-  tags:
-    - docker
-  script:
-    - 'static-analysis.sh'
-  allow_failure: true
-  except:
-    - master
+variables:
+  CI_PYTHON_UNIVERSAL: "yes"
+  CI_SKIP_SYSTEM_UNIT_TESTS: "yes"
 
-unit-test-python27:
-  stage: local-test
-  tags:
-    - docker
-  script:
-    - 'unit-test-virtualenv.sh'
-  except:
-    - master
-
-unit-test-python36:
-  stage: local-test
-  tags:
-    - docker
-  script:
-    - 'unit-test-virtualenv.sh python36'
-  except:
-    - master
-
-coverage-python36:
-  stage: local-test
-  tags:
-    - docker
-  script:
-    - 'coverage-virtualenv.sh python36'
-  coverage: '/TOTAL.*\s+(\d+%)$/'
-  allow_failure: true
-  except:
-    - master
+include:
+  - project: 'dpres/gitlab-ci-pipeline'
+    ref: master
+    file:
+      - '/pipeline/common.yml'
