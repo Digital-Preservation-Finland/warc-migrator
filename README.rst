@@ -37,6 +37,9 @@ Install the required software with commands::
     pip install -r requirements_github.txt
     pip install .
 
+To deactivate the virtual environment, run ``deactivate``.
+To reactivate it, run the ``source`` command above.
+
 Usage:
 ------
 
