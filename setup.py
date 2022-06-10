@@ -8,7 +8,13 @@ setup(
     include_package_data=True,
     version=__version__,
     install_requires=[
-        "click", "warcio", "warctools", "six", "lxml"
+        "click",
+        "warcio",
+        "warctools",
+        "six",
+        "lxml",
+        "xml_helpers@git+https://gitlab.ci.csc.fi/dpres/xml-helpers.git"
+        "@develop#egg=xml_helpers"
     ],
     entry_points={'console_scripts': [
         'warc-migrator=warc_migrator.migrator:warc_migrator_cli']},
