@@ -174,11 +174,12 @@ class WarcFixer(object):
         """
         self.target.set_warcinfo(deepcopy(self.source.warcinfo))
         self.target.warcinfo["conformsTo"] = \
-            "https://iipc.github.io/warc-specifications/" \
-            "specifications/warc-format/warc-1.0/"
-        self.target.warcinfo["format"] = "WARC File Format 1.0"
-        for key, value in self.given_warcinfo.items():
-            self.target.warcinfo[key] = value
+            ["https://iipc.github.io/warc-specifications/"
+             "specifications/warc-format/warc-1.0/"]
+        self.target.warcinfo["format"] = ["WARC File Format 1.0"]
+        for key, values in self.given_warcinfo.items():
+            for value in values:
+                self.target.set_warcinfo_field(key, value)
         self.target.create_info_record(
             self.source.warcinfo_record.rec_headers, "warcinfo")
 

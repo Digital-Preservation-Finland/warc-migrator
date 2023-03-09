@@ -37,7 +37,10 @@ class ArchiveHandler(object):
         :key: Key to be added
         :value: Value to be added
         """
-        self.warcinfo[decode_utf8(key)] = decode_utf8(value)
+        if self.warcinfo.get(decode_utf8(key)):
+            self.warcinfo[decode_utf8(key)].append(decode_utf8(value))
+        else:
+            self.warcinfo[decode_utf8(key)] = [decode_utf8(value)]
 
     def append_metadata(self, metadata):
         """
@@ -97,11 +100,12 @@ class ArchiveHandler(object):
             iterator = self.warcinfo.iteritems()
         else:
             iterator = self.warcinfo.items()
-        for (key, value) in iterator:
-            if not value.startswith(" "):
-                value = " " + value
-            if not value.endswith("\r\n"):
-                value = value + "\r\n"
-            payload = payload + b"%s:%s" % (encode_utf8(key),
-                                            encode_utf8(value))
+        for key, values in iterator:
+            for value in values:
+                if not value.startswith(" "):
+                    value = " " + value
+                if not value.endswith("\r\n"):
+                    value = value + "\r\n"
+                payload = payload + b"%s:%s" % (encode_utf8(key),
+                                                encode_utf8(value))
         return payload

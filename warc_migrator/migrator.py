@@ -55,7 +55,10 @@ def migrate_to_warc(source_path, target_path, meta):
 
     given_warcinfo = {}
     for field in meta:
-        given_warcinfo[decode_utf8(field[0])] = decode_utf8(field[1])
+        if given_warcinfo.get(decode_utf8(field[0])):
+            given_warcinfo[decode_utf8(field[0])].append(decode_utf8(field[1]))
+        else:
+            given_warcinfo[decode_utf8(field[0])] = [decode_utf8(field[1])]
 
     warc_migr = WarcMigrator(source_path, target_path, given_warcinfo)
     if is_arc(source_path):
