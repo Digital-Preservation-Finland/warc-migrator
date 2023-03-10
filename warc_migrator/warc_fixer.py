@@ -179,7 +179,7 @@ class WarcFixer(object):
         self.target.warcinfo["format"] = ["WARC File Format 1.0"]
         for key, values in self.given_warcinfo.items():
             for value in values:
-                self.target.set_warcinfo_field(key, value)
+                self.target.add_warcinfo_field(key, value)
         self.target.create_info_record(
             self.source.warcinfo_record.rec_headers, "warcinfo")
 
@@ -219,7 +219,7 @@ class WarcFixer(object):
             if field == b"\r\n":
                 break
             split_row = field.split(b":", 1)
-            self.source.set_warcinfo_field(split_row[0], split_row[1])
+            self.source.add_warcinfo_field(split_row[0], split_row[1])
 
     def _extract_arc_metadata(self):
         """
@@ -252,4 +252,4 @@ class WarcFixer(object):
         for field in arc_metadata:
             tagname = field.tag.split("}")[1]
             if tagname != "arcmetadata":
-                self.source.set_warcinfo_field(tagname, field.text)
+                self.source.add_warcinfo_field(tagname, field.text)

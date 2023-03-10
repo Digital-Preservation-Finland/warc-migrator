@@ -30,9 +30,12 @@ class ArchiveHandler(object):
         """
         self.warcinfo = warcinfo
 
-    def set_warcinfo_field(self, key, value):
+    def add_warcinfo_field(self, key, value):
         """
-        Set or replace an element to warcinfo dict.
+        The values of the warcinfo dict are lists so multiple values of
+        warcinfo fields with the same name can be stored.
+        This adds a new value to a key if it already exists in the dict, or
+        creates a new element in the dict if not.
 
         :key: Key to be added
         :value: Value to be added
