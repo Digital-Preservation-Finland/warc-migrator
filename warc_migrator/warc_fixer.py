@@ -4,7 +4,7 @@ Fix produced WARC file to WARC 1.0.
 import os
 import datetime
 from copy import deepcopy
-import six
+import urllib.parse
 import lxml.etree as ET
 from warcio.warcwriter import WARCWriter
 from warcio.archiveiterator import ArchiveIterator
@@ -163,7 +163,7 @@ class WarcFixer(object):
                     status[1].encode('ascii')
                 except (UnicodeEncodeError, UnicodeDecodeError):
                     record.http_headers.statusline = " ".join(
-                        [status[0], six.moves.urllib.parse.quote(status[1])])
+                        [status[0], urllib.parse.quote(status[1])])
 
     def _fix_warcinfo(self):
         """

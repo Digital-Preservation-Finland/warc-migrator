@@ -2,7 +2,6 @@
 Handler for warcinfo and metadata records.
 """
 from io import BytesIO
-import six
 from warcio.recordbuilder import RecordBuilder
 from xml_helpers.utils import decode_utf8, encode_utf8
 
@@ -99,10 +98,7 @@ class ArchiveHandler(object):
         :returns: Warcinfo as payload
         """
         payload = b""
-        if six.PY2:
-            iterator = self.warcinfo.iteritems()
-        else:
-            iterator = self.warcinfo.items()
+        iterator = self.warcinfo.items()
         for key, values in iterator:
             for value in values:
                 if not value.startswith(" "):

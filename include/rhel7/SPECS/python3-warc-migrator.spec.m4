@@ -20,7 +20,7 @@ Source0:        %{file_prefix}-v%{file_version}%{?file_release_tag}-%{file_build
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 BuildArch:      noarch
 
-Requires:       python3 python36-click python36-lxml python36-six
+Requires:       python3 python36-click python36-lxml
 Requires:       python3-warcio python3-warc-tools python3-xml-helpers
 BuildRequires:  python3-setuptools python36-pytest
 
