@@ -169,7 +169,7 @@ class WarcFixer(object):
         """
         Fixes WARC's warcinfo record in various ways:
         - Rewrite conformsTo and format fields in warcinfo.
-        - Add user given fields. Overwrites, if exists.
+        - Add user given fields.
         - Rewrite WARC-Date and WARC-Filename fields from the header.
         """
         self.target.set_warcinfo(deepcopy(self.source.warcinfo))
@@ -224,7 +224,7 @@ class WarcFixer(object):
     def _extract_arc_metadata(self):
         """
         Create warcinfo from ARC metadata in WARC metadata record.
-        Supports ARC and Dublin Core (DC 1.1, DC Terms, DCMIType) metadat
+        Supports ARC and Dublin Core (DC 1.1, DC Terms, DCMIType) metadata
         fields.
         """
         line = b""

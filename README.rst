@@ -48,7 +48,7 @@ The `targetfile` must be a non-existing file.
 Option `--meta` along with `fieldname` and `value` is optional and can be
 given multiple times. The `fieldname` is the name of the warcinfo field and
 `value` is the contained metadata string. These fields are added to warcinfo
-record. The given field overwrites the possibly existing field.
+record.
 
 Migration:
 ----------
@@ -114,8 +114,7 @@ XML metadata.
            conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
            format: WARC File Format 1.0
 
-    3. User defined fields, which will overwrite the possibly existing fields 
-       with the same key added in steps 4.1. and 4.2.
+    3. User defined fields.
 
 5. The actual ARC metadata payload is the ARC header including the possible XML metadata.
 
@@ -156,8 +155,7 @@ The migration is quite straightforward.
            conformsTo: https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.0/
            format: WARC File Format 1.0
 
-    2. User defined fields, which will overwrite the possibly existing fields
-       with the same key.
+    2. User defined fields.
 
 5. The actual payloads of the other records are direct copies of the payloads of
    the original records, but those HTTP header values are URL encoded, which can

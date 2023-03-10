@@ -19,15 +19,14 @@ from warc_migrator.warctools_handler import convert, is_arc
 @click.option("--meta", nargs=2, type=str, multiple=True,
               metavar="<NAME> <VALUE>", default=(),
               help="Warcinfo field name and value to be added to the WARC "
-                   "file. Overwrites existing field.")
+                   "file.")
 def warc_migrator_cli(source_path, target_path, meta):
     """
     WARC Migrator.
 
     Convert ARC 1.0/1.1 or WARC 0.17/0.18 file to WARC 1.0 and adds given
-    metadata fields to warcinfo. The given fields overwrite the possibly
-    existing fields of the same keys. The resulted file will be a gzipped
-    WARC file. This tool also validates the resulted file.
+    metadata fields to warcinfo. The resulted file will be a gzipped WARC file.
+    This tool also validates the resulted file.
 
     \b
     SOURCE: Source arc or warc file
@@ -45,7 +44,7 @@ def migrate_to_warc(source_path, target_path, meta):
 
     :source_path: Source archive file name
     :target_path: Target WARC file name, will be compressed WARC
-    :meta: User given metadata fields to warcinfo record
+    :meta: User given metadata fields that are added to warcinfo record
     :returns: Number of records written
     """
     if os.path.exists(target_path):
