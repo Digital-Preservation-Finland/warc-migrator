@@ -12,7 +12,6 @@ from warc_migrator.warc_fixer import WarcFixer
     ["infile", "orig_arc", "given_count"],
     [
         ("valid_0.17.warc", False, 2),
-        ("valid_0.17_scandinavian.warc", False, 2),
         ("valid_1.0_warctools_resulted.warc", True, 4)
     ]
 )

@@ -4,7 +4,6 @@ Fix produced WARC file to WARC 1.0.
 import os
 import datetime
 from copy import deepcopy
-import urllib.parse
 import lxml.etree as ET
 from warcio.warcwriter import WARCWriter
 from warcio.archiveiterator import ArchiveIterator
@@ -150,7 +149,9 @@ class WarcFixer(object):
         """
         Fix WARC data record, other than warcinfo of ARC mewtadata record.
         - Change protocol to WARC/1.0
-        - If necessary, URL encode HTTP header in the record
+
+        If the HTTP header contains non-ASCII characters, an exception will be
+        raised.
 
         :record: WARC data record
         """
@@ -159,11 +160,7 @@ class WarcFixer(object):
         if record.http_headers:
             status = record.http_headers.statusline.split(" ", 1)
             if len(status) > 1:
-                try:
-                    status[1].encode('ascii')
-                except (UnicodeEncodeError, UnicodeDecodeError):
-                    record.http_headers.statusline = " ".join(
-                        [status[0], urllib.parse.quote(status[1])])
+                status[1].encode('ascii')
 
     def _fix_warcinfo(self):
         """

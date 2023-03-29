@@ -119,9 +119,7 @@ XML metadata.
 5. The actual ARC metadata payload is the ARC header including the possible XML metadata.
 
 6. The actual payloads of the other records are direct copies of the payloads of
-   the original records, but those HTTP header values are URL encoded, which can
-   not be fitted to US-ASCII. This URL encoding rule applies also to the
-   description in the statusline.
+   the original records.
 
 
 **Migration of WARC 0.17/0.18 files to WARC 1.0**
@@ -158,9 +156,7 @@ The migration is quite straightforward.
     2. User defined fields.
 
 5. The actual payloads of the other records are direct copies of the payloads of
-   the original records, but those HTTP header values are URL encoded, which can
-   not be fitted to US-ASCII. This URL encoding rule applies also to the
-   description in the statusline.
+   the original records.
 
 6. A separate metadata record is not created, as done in ARC migration above.
 
