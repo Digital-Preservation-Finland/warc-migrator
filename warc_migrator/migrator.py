@@ -5,10 +5,14 @@ import os
 import subprocess
 import tempfile
 import click
-from warcio.exceptions import ArchiveLoadFailed
+
 from xml_helpers.utils import decode_utf8
 from warc_migrator.warc_fixer import WarcFixer, recompress_warc
-from warc_migrator.warctools_handler import convert, is_arc
+
+from hanzo.arc2warc import ArcTransformer
+from hanzo.warctools.mixed import MixedRecord
+from hanzo.warctools.warc import WarcRecord
+from warcio.exceptions import ArchiveLoadFailed
 
 
 @click.command()
@@ -102,6 +106,50 @@ def run_validation(tool, filename, stdout=subprocess.PIPE):
              decode_utf8(stderr)])
         raise ValidationError(error)
     return (returncode, stdout, stderr)
+
+
+def is_arc(source_path):
+    """
+    Resolve with Warctools whether a file is an ARC file or WARC file
+
+    :source_path: Archive file path.
+    :returns: True for ARC file, False for WARC
+    """
+    arc_file = True
+    handler = MixedRecord.open_archive(filename=source_path, gzip="auto")
+    try:
+        for record in handler:
+            if isinstance(record, WarcRecord):
+                arc_file = False
+            break
+    finally:
+        handler.close()
+
+    return arc_file
+
+
+def convert(infile, out):
+    """
+    Convert ARC to WARC with using Warctools.
+
+    :infile: ARC filename
+    :out: WARC file handler
+    """
+    count = 0
+    arc = ArcTransformer()
+    file_handler = MixedRecord.open_archive(filename=infile, gzip="auto")
+    try:
+        for record in file_handler:
+            warcs = arc.convert(record)
+            for warcrecord in warcs:
+                warcrecord.write_to(out, gzip=False)
+
+            count += len(warcs)
+
+    finally:
+        file_handler.close()
+
+    return count
 
 
 class ValidationError(Exception):
