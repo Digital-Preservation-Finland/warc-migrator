@@ -50,7 +50,7 @@ def test_non_ascii_header(tmpdir):
     will raise an exception.
     """
     target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
-    source = "tests/data/valid_0.17_scandinavian.warc"
+    source = "tests/data/invalid_0.17_scandinavian.warc"
     with pytest.raises(UnicodeEncodeError):
         migrate_to_warc(source, target, ())
 
