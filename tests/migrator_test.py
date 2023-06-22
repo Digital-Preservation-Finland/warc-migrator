@@ -10,6 +10,9 @@ from warc_migrator.migrator import (migrate_to_warc, run_validation,
                                     ValidationError, warc_migrator_cli,
                                     is_arc, convert)
 
+from warcio.archiveiterator import ArchiveIterator
+import hashlib
+
 
 @pytest.mark.parametrize(
     ["source", "meta", "real_count"],
@@ -42,6 +45,33 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
     run_validation("warcio", target)
     assert count == real_count
     assert os.path.isfile(target)
+
+
+@pytest.mark.parametrize(
+        ["test_arc", "meta"],
+        [("valid_1.0.arc", ())]
+)
+def test_payload_checksum(test_arc, meta, tmpdir):
+    target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
+    source = os.path.join("tests/data", test_arc)
+
+    # ARC ???
+    with open(source, "rb") as stream:
+        for record in ArchiveIterator(stream):
+            if record.rec_type == "response":
+                sha1hash = hashlib.sha1(record.raw_stream.read())
+                arc_digest = sha1hash.hexdigest()
+
+    migrate_to_warc(source, target, meta)
+
+    # WARC
+    with open(target, "rb") as stream:
+        for record in ArchiveIterator(stream):
+            if record.rec_type == "response":
+                warc_digest = record.rec_headers.get_header(
+                    'WARC-Payload-Digest')
+
+    assert arc_digest == warc_digest
 
 
 def test_non_ascii_header(tmpdir):
