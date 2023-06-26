@@ -50,12 +50,13 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
 @pytest.mark.parametrize(
         ["test_arc", "meta"],
         [("valid_1.0.arc", ()),
-         ("valid_1.1.arc", ())]
+         ("valid_1.1.arc", ()),
+         ("valid_0.17.warc", ())]
 )
 def test_payload_checksum(test_arc, meta, tmpdir):
     """
-    Test that the checksum of an arc file stays the same in the warc file that
-    results from the migration.
+    Test that the checksum of an arc/warc file stays the same in the warc file
+    that results from the migration.
     """
     target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
     source = os.path.join("tests/data", test_arc)
