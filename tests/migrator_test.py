@@ -53,25 +53,27 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
          ("valid_1.1.arc", ())]
 )
 def test_payload_checksum(test_arc, meta, tmpdir):
+    """
+    Test that the checksum of an arc file stays the same in the warc file that
+    results from the migration.
+    """
     target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
     source = os.path.join("tests/data", test_arc)
 
-    # ARC
     with open(source, "rb") as stream:
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
                 sha1hash = hashlib.sha1(record.raw_stream.read())
                 digest = base64.b32encode(sha1hash.digest())
-                arc_digest = digest.decode("utf-8")
+                arc_digest = "sha1:" + digest.decode("utf-8")
 
     migrate_to_warc(source, target, meta)
 
-    # WARC
     with open(target, "rb") as stream:
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
                 warc_digest = record.rec_headers.get_header(
-                    'WARC-Payload-Digest').split(":")[-1]
+                    'WARC-Payload-Digest')
 
     assert arc_digest == warc_digest
 
