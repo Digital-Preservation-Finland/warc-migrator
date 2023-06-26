@@ -1,17 +1,17 @@
 """
 Test the WARC migrator.
 """
+import base64
+import hashlib
 import os
 import pytest
 
 from click.testing import CliRunner
+from warcio.archiveiterator import ArchiveIterator
 
 from warc_migrator.migrator import (migrate_to_warc, run_validation,
                                     ValidationError, warc_migrator_cli,
                                     is_arc, convert)
-
-from warcio.archiveiterator import ArchiveIterator
-import hashlib
 
 
 @pytest.mark.parametrize(
@@ -49,18 +49,20 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
 
 @pytest.mark.parametrize(
         ["test_arc", "meta"],
-        [("valid_1.0.arc", ())]
+        [("valid_1.0.arc", ()),
+         ("valid_1.1.arc", ())]
 )
 def test_payload_checksum(test_arc, meta, tmpdir):
     target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
     source = os.path.join("tests/data", test_arc)
 
-    # ARC ???
+    # ARC
     with open(source, "rb") as stream:
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
                 sha1hash = hashlib.sha1(record.raw_stream.read())
-                arc_digest = sha1hash.hexdigest()
+                digest = base64.b32encode(sha1hash.digest())
+                arc_digest = digest.decode("utf-8")
 
     migrate_to_warc(source, target, meta)
 
@@ -69,7 +71,7 @@ def test_payload_checksum(test_arc, meta, tmpdir):
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
                 warc_digest = record.rec_headers.get_header(
-                    'WARC-Payload-Digest')
+                    'WARC-Payload-Digest').split(":")[-1]
 
     assert arc_digest == warc_digest
 
