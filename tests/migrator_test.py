@@ -64,9 +64,11 @@ def test_payload_checksum(test_arc, meta, tmpdir):
     with open(source, "rb") as stream:
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
-                sha1hash = hashlib.sha1(record.raw_stream.read())
-                digest = base64.b32encode(sha1hash.digest())
-                arc_digest = "sha1:" + digest.decode("utf-8")
+                if (record.rec_headers.get_header("content-type") ==
+                        "text/html"):
+                    sha1hash = hashlib.sha1(record.raw_stream.read())
+                    digest = base64.b32encode(sha1hash.digest())
+                    arc_digest = "sha1:" + digest.decode("utf-8")
 
     migrate_to_warc(source, target, meta)
 
