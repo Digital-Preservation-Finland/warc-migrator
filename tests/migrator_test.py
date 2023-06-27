@@ -48,37 +48,45 @@ def test_migrate_to_warc(source, meta, real_count, tmpdir):
 
 
 @pytest.mark.parametrize(
-        ["test_arc", "meta"],
+        ["test_file", "meta"],
         [("valid_1.0.arc", ()),
          ("valid_1.1.arc", ()),
          ("valid_0.17.warc", ())]
 )
-def test_payload_checksum(test_arc, meta, tmpdir):
+def test_payload_checksum(test_file, meta, tmpdir):
     """
     Test that the checksum of an arc/warc file stays the same in the warc file
     that results from the migration.
     """
     target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
-    source = os.path.join("tests/data", test_arc)
+    source = os.path.join("tests/data", test_file)
 
+    source_payloads = []
     with open(source, "rb") as stream:
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
-                if (record.rec_headers.get_header("content-type") ==
-                        "text/html"):
-                    sha1hash = hashlib.sha1(record.raw_stream.read())
-                    digest = base64.b32encode(sha1hash.digest())
-                    arc_digest = "sha1:" + digest.decode("utf-8")
+                sha1hash = hashlib.sha1(record.raw_stream.read())
+                digest = base64.b32encode(sha1hash.digest())
+                source_digest = "sha1:" + digest.decode("utf-8")
+                source_payloads.append(source_digest)
 
     migrate_to_warc(source, target, meta)
 
+    target_headers = []
+    target_payloads = []
     with open(target, "rb") as stream:
         for record in ArchiveIterator(stream):
             if record.rec_type == "response":
-                warc_digest = record.rec_headers.get_header(
+                header_checksum = record.rec_headers.get_header(
                     'WARC-Payload-Digest')
+                target_headers.append(header_checksum)
+                sha1hash = hashlib.sha1(record.raw_stream.read())
+                digest = base64.b32encode(sha1hash.digest())
+                target_digest = "sha1:" + digest.decode("utf-8")
+                target_payloads.append(target_digest)
 
-    assert arc_digest == warc_digest
+    assert source_payloads == target_payloads
+    assert source_payloads == target_headers
 
 
 def test_non_ascii_header(tmpdir):
