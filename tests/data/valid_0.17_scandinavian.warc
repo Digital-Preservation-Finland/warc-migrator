@@ -2,7 +2,7 @@ WARC/0.17
 WARC-Type: warcinfo
 WARC-Record-ID: <urn:uuid:dc8180b5-7eb0-23b2-8818-8016f62219c2>
 Content-Length: 185
-WARC-Filename: invalid_0.17_scandinavian.warc
+WARC-Filename: valid_0.17_scandinavian.warc
 WARC-Date: 2021-06-15T15:57:43Z
 Content-Type: application/warc-fields
 

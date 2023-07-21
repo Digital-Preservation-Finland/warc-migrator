@@ -21,6 +21,7 @@ from warc_migrator.migrator import (migrate_to_warc, run_validation,
         ("valid_1.1.arc", (), 4),
         ("invalid_1.0_missing_length.arc", (), 4),
         ("valid_0.17.warc", (), 2),
+        ("valid_0.17_scandinavian.warc", (), 2),
         ("invalid_0.17_incorrectly_compressed.warc.gz", (), 2),
         ("valid_1.0.arc", (("k1", "v1"), ("k2", "v2")), 4),
         ("valid_1.1.arc", (("k1", "v1"), ("k2", "v2")), 4),
@@ -28,6 +29,7 @@ from warc_migrator.migrator import (migrate_to_warc, run_validation,
         ("invalid_1.0_missing_length.arc", (("k1", "v1"), ("k2", "v2")), 4),
         ("valid_0.17.warc", (("k1", "v1"), ("k2", "v2")), 2),
         ("valid_0.17.warc", (("k1", "v1"), ("k2", "v2"), ("k2", "v3")), 2),
+        ("valid_0.17_scandinavian.warc", (("k1", "v1"), ("k2", "v2")), 2),
         ("invalid_0.17_incorrectly_compressed.warc.gz",
          (("k1", "v1"), ("k2", "v2")), 2),
 
@@ -87,17 +89,6 @@ def test_payload_checksum(test_file, meta, tmpdir):
 
     assert source_payloads == target_payloads
     assert source_payloads == target_headers
-
-
-def test_non_ascii_header(tmpdir):
-    """
-    Test that trying to migrate a warc with non-ASCII characters in its header
-    will raise an exception.
-    """
-    target = str(tmpdir.mkdir("warc-migrator").join("warc.warc.gz"))
-    source = "tests/data/invalid_0.17_scandinavian.warc"
-    with pytest.raises(UnicodeEncodeError):
-        migrate_to_warc(source, target, ())
 
 
 def test_run_validation():
