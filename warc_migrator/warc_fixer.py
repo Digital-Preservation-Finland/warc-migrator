@@ -37,6 +37,28 @@ def recompress_warc(source, target):
 
 
 # pylint: disable=too-few-public-methods
+class SimpleHeader():
+    """
+    Fake buffer of Warcio HTTP header to avoid encoding of bytes.
+    """
+    def __init__(self, headers):
+        """
+        Warcio has headers_buff attribute for header infomation.
+        We've implemented our own raw_headers variable into warcio, which
+        contains the headers as bytes right away without needing any encoding.
+
+        :headers: Warcio record header
+        """
+        self.headers_buff = headers.raw_headers
+
+    def compute_headers_buffer(self, header_filter=None):
+        """
+        Just skip the computing operations to header buffer.
+        """
+        pass
+
+
+# pylint: disable=too-few-public-methods
 class WarcFixer(object):
     """
     Fix WARC file in various ways.
@@ -146,24 +168,28 @@ class WarcFixer(object):
 
         return count
 
-    def _fix_warc_data_record(self, record):
+    def _fix_warc_data_record(self, record, encode=False):
         """
         Fix WARC data record, other than warcinfo of ARC mewtadata record.
         - Change protocol to WARC/1.0
-        - If necessary, URL encode HTTP header in the record
+        - If necessary, URL encode HTTP header in the record,
+          otherwise leave it as it is
 
         :record: WARC data record
         """
         # pylint: disable=no-self-use
         record.rec_headers.protocol = "WARC/1.0"
         if record.http_headers:
-            status = record.http_headers.statusline.split(" ", 1)
-            if len(status) > 1:
-                try:
-                    status[1].encode('ascii')
-                except (UnicodeEncodeError, UnicodeDecodeError):
-                    record.http_headers.statusline = " ".join(
-                        [status[0], urllib.parse.quote(status[1])])
+            if encode:
+                status = record.http_headers.statusline.split(" ", 1)
+                if len(status) > 1:
+                    try:
+                        status[1].encode('ascii')
+                    except (UnicodeEncodeError, UnicodeDecodeError):
+                        record.http_headers.statusline = " ".join(
+                            [status[0], urllib.parse.quote(status[1])])
+            else:
+                record.http_headers = SimpleHeader(record.http_headers)
 
     def _fix_warcinfo(self):
         """
