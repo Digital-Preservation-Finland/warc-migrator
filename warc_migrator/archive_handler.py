@@ -6,7 +6,7 @@ from warcio.recordbuilder import RecordBuilder
 from xml_helpers.utils import decode_utf8, encode_utf8
 
 
-class ArchiveHandler(object):
+class ArchiveHandler:
     """
     Handler for warcinfo and metadata record read from a file or
     to be written to a file.

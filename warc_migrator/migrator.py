@@ -54,7 +54,7 @@ def migrate_to_warc(source_path, target_path, meta):
     if os.path.exists(target_path):
         raise OSError("Target file already exists.")
     if os.stat(source_path).st_size == 0:
-        raise IOError("Empty source file.")
+        raise OSError("Empty source file.")
 
     given_warcinfo = {}
     for field in meta:
@@ -156,7 +156,7 @@ class ValidationError(Exception):
     """Exception class for ValidationError"""
 
 
-class WarcMigrator(object):
+class WarcMigrator:
     """
     WARC migrator class.
     """

@@ -59,7 +59,7 @@ class SimpleHeader():
 
 
 # pylint: disable=too-few-public-methods
-class WarcFixer(object):
+class WarcFixer:
     """
     Fix WARC file in various ways.
 
